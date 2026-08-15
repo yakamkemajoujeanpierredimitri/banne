@@ -1,0 +1,165 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AdminReservationsManager from '../../components/AdminReservationsManager.jsx';
+---
+
+<Layout title="Admin Dashboard - Albergobanne">
+    <div class="container admin-layout">
+        <aside class="admin-sidebar">
+            <h2 class="sidebar-title">Admin Menu</h2>
+            <nav class="sidebar-nav">
+                <a href="/admin/dashboard" class="sidebar-link active">Reservations</a>
+                <a href="/admin/rooms" class="sidebar-link">Manage Rooms</a>
+            </nav>
+        </aside>
+
+        <main class="admin-content">
+            <div class="admin-dashboard-view">
+                <header class="admin-header">
+                    <h1>Reservations Dashboard</h1>
+                    <p>Manage hotel bookings and payment statuses.</p>
+                </header>
+
+                <section class="metrics-grid">
+                    <div class="metric-card">
+                        <h3>Total Reservations</h3>
+                        <p class="metric-value">24</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Pending Payments</h3>
+                        <p class="metric-value">5</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Occupancy Rate</h3>
+                        <p class="metric-value">85%</p>
+                    </div>
+                </section>
+
+                <section class="reservations-section">
+                    <AdminReservationsManager client:load />
+                </section>
+            </div>
+        </main>
+    </div>
+</Layout>
+
+<style>
+    /* Note: Sidebar layout CSS is inherited globally from rooms.astro, so we only define local styles here */
+    
+    .admin-dashboard-view {
+        background: transparent;
+    }
+    .admin-header {
+        margin-bottom: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .admin-header h1 {
+        font-size: 2.5rem;
+    }
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    .metric-card {
+        background: var(--primary);
+        color: white;
+        padding: 1.5rem;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+    }
+    .metric-card h3 {
+        color: white;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 1rem;
+        font-weight: 500;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+    }
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        font-family: 'Cormorant', serif;
+    }
+    .reservations-section {
+        background: var(--surface);
+        padding: 2.5rem;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+    }
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    .section-header h2 {
+        font-size: 1.8rem;
+    }
+    .table-container {
+        overflow-x: auto;
+    }
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+    .admin-table th, .admin-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .admin-table th {
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .admin-table tbody tr:hover {
+        background-color: var(--background);
+    }
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .status-badge.paid {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    .status-badge.pending {
+        background: #fff3e0;
+        color: #e65100;
+    }
+    .status-badge.cancelled {
+        background: #ffebee;
+        color: #c62828;
+    }
+    .action-btn {
+        background: transparent;
+        color: var(--primary);
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        transition: background 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    .action-btn:hover {
+        background: var(--border);
+    }
+    .btn-outline {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+    }
+    .btn-outline:hover {
+        background: var(--primary);
+        color: white;
+    }
+</style>

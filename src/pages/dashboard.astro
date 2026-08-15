@@ -1,0 +1,220 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Image } from 'astro:assets';
+import pic4 from '../assets/pic4.jpg';
+
+// Mock user data
+const user = {
+    name: 'Jane Doe',
+    email: 'jane.doe@example.com',
+    memberSince: '2023',
+};
+
+const bookings = [
+    {
+        id: 'BKG-1234',
+        roomName: 'Deluxe Suite',
+        checkIn: '2026-09-10',
+        checkOut: '2026-09-15',
+        status: 'Confirmed',
+        image: pic4
+    }
+];
+---
+
+<Layout title="My Account - Albergobanne">
+    <div class="container dashboard">
+        <header class="dashboard-header">
+            <h1>Welcome back, {user.name}</h1>
+            <p>Manage your luxury stays and account details.</p>
+        </header>
+
+        <div class="dashboard-grid">
+            <aside class="profile-card">
+                <div class="avatar">JD</div>
+                <h2>{user.name}</h2>
+                <p>{user.email}</p>
+                <p class="member-tag">Gold Member • Since {user.memberSince}</p>
+                <button class="btn logout-btn">Log Out</button>
+            </aside>
+
+            <main class="bookings-section">
+                <h2>Your Upcoming Stays</h2>
+                {bookings.length > 0 ? (
+                    <div class="booking-list">
+                        {bookings.map(booking => (
+                            <div class="booking-card">
+                                <div class="booking-img-wrapper">
+                                    <Image src={booking.image} alt={booking.roomName} class="booking-img" />
+                                </div>
+                                <div class="booking-info">
+                                    <div class="booking-header">
+                                        <h3>{booking.roomName}</h3>
+                                        <span class="status-badge">{booking.status}</span>
+                                    </div>
+                                    <p><strong>Booking ID:</strong> {booking.id}</p>
+                                    <p><strong>Check-in:</strong> {booking.checkIn}</p>
+                                    <p><strong>Check-out:</strong> {booking.checkOut}</p>
+                                    <div class="booking-actions">
+                                        <button class="btn btn-outline">View Details</button>
+                                        <button class="btn btn-danger">Cancel Stay</button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p class="no-bookings">You have no upcoming bookings. <a href="/rooms">Explore our rooms</a> to plan your next stay.</p>
+                )}
+            </main>
+        </div>
+    </div>
+</Layout>
+
+<style>
+    .dashboard {
+        padding: 4rem 1.5rem;
+    }
+    .dashboard-header {
+        margin-bottom: 3rem;
+    }
+    .dashboard-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 3rem;
+    }
+    
+    @media (max-width: 900px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Profile Card */
+    .profile-card {
+        background: var(--surface);
+        padding: 2rem;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        text-align: center;
+        height: fit-content;
+    }
+    .avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        font-size: 2rem;
+        font-family: 'Cormorant', serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+    .profile-card h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .member-tag {
+        color: var(--secondary);
+        font-weight: 600;
+        margin: 1rem 0 2rem;
+        font-size: 0.9rem;
+    }
+    .logout-btn {
+        width: 100%;
+        background-color: var(--primary);
+    }
+    .logout-btn:hover {
+        background-color: #1e40af;
+    }
+
+    /* Bookings */
+    .bookings-section h2 {
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    .booking-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .booking-card {
+        display: flex;
+        background: var(--surface);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+    }
+    .booking-img-wrapper {
+        width: 200px;
+        flex-shrink: 0;
+    }
+    .booking-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .booking-info {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .booking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+    .booking-header h3 {
+        font-size: 1.25rem;
+        margin: 0;
+    }
+    .status-badge {
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .booking-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    .btn-outline {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+    }
+    .btn-outline:hover {
+        background: var(--primary);
+        color: white;
+    }
+    .btn-danger {
+        background: #ef4444;
+    }
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+    
+    @media (max-width: 600px) {
+        .booking-card {
+            flex-direction: column;
+        }
+        .booking-img-wrapper {
+            width: 100%;
+            height: 200px;
+        }
+    }
+</style>

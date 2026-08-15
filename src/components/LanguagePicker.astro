@@ -1,0 +1,40 @@
+---
+// src/components/LanguagePicker.astro
+const currentLocale = Astro.currentLocale || 'it';
+---
+
+<div class="lang-picker">
+    <a href="/" class={currentLocale === 'it' ? 'active' : ''}>IT</a>
+    <a href="/en" class={currentLocale === 'en' ? 'active' : ''}>EN</a>
+    <a href="/fr" class={currentLocale === 'fr' ? 'active' : ''}>FR</a>
+    <a href="/nl" class={currentLocale === 'nl' ? 'active' : ''}>NL</a>
+</div>
+
+<style>
+    .lang-picker {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: 1rem;
+        border-left: 1px solid var(--border);
+        padding-left: 1rem;
+        align-items: center;
+    }
+    .lang-picker a {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: background 0.2s, color 0.2s;
+    }
+    .lang-picker a:hover {
+        background: var(--background);
+        color: var(--primary);
+    }
+    .lang-picker a.active {
+        background: var(--primary);
+        color: white;
+    }
+</style>
