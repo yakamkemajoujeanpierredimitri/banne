@@ -1,0 +1,137 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { prisma } from '../lib/prisma';
+import { createSession } from '../lib/auth';
+import crypto from 'crypto';
+
+let error = '';
+
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  const name = data.get('name')?.toString();
+  const email = data.get('email')?.toString();
+  const password = data.get('password')?.toString();
+
+  if (name && email && password) {
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      error = 'Email is already registered';
+    } else {
+      const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+      
+      const user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: passwordHash,
+          role: 'GUEST'
+        }
+      });
+
+      const session = await createSession(user.id);
+      Astro.cookies.set('auth_session', session.id, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        expires: session.expiresAt
+      });
+      return Astro.redirect('/dashboard');
+    }
+  } else {
+    error = 'Please fill out all fields';
+  }
+}
+---
+
+<Layout title="Register - Albergobanne">
+  <div class="auth-container container">
+    <div class="auth-card">
+      <h1>Create an Account</h1>
+      <p>Join us to book your perfect stay.</p>
+      
+      {error && <div class="error-alert">{error}</div>}
+      
+      <form method="POST" class="auth-form">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required minlength="6" />
+        </div>
+        <button type="submit" class="btn">Register</button>
+      </form>
+      <div class="auth-links">
+        <p>Already have an account? <a href="/login">Log in here</a></p>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding: 2rem;
+  }
+  .auth-card {
+    background: var(--surface);
+    padding: 3rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+  }
+  .auth-card h1 {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+  }
+  .auth-card p {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+  }
+  .error-alert {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+  }
+  .auth-form {
+    text-align: left;
+  }
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+  .auth-links a {
+    color: var(--primary);
+    font-weight: 600;
+  }
+</style>

@@ -1,11 +1,20 @@
-import { createSignal, createMemo } from 'solid-js';
+import { createSignal, createMemo, onMount } from 'solid-js';
 
 export default function AdminRoomsManager() {
-  const [rooms, setRooms] = createSignal([
-    { id: '1', name: 'Deluxe Suite', price: 250, description: 'Spacious suite with city views.', image: '/src/assets/pic4.jpg', isAvailable: true },
-    { id: '2', name: 'Standard Room', price: 150, description: 'Comfortable room for two.', image: '/src/assets/pic5.jpg', isAvailable: true },
-    { id: '3', name: 'Family Room', price: 300, description: 'Perfect for families with kids.', image: '/src/assets/pic6.jpg', isAvailable: false },
-  ]);
+  const [rooms, setRooms] = createSignal([]);
+
+  onMount(async () => {
+    try {
+      const res = await fetch('/api/rooms');
+      if (res.ok) {
+        const data = await res.json();
+        // ensure we format image to image for old mock compatibility or just use imageUrl
+        setRooms(data.map(r => ({ ...r, image: r.imageUrl })));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
 
   const [search, setSearch] = createSignal('');
   const [maxPrice, setMaxPrice] = createSignal(1000);
@@ -24,29 +33,69 @@ export default function AdminRoomsManager() {
     );
   });
 
-  const handleAddRoom = (e) => {
+  const handleAddRoom = async (e) => {
     e.preventDefault();
-    const newRoom = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newName(),
-      description: newDesc(),
-      price: parseFloat(newPrice()),
-      isAvailable: true,
-      image: newImage() ? URL.createObjectURL(newImage()) : '/src/assets/pic4.jpg' 
-    };
-    setRooms([newRoom, ...rooms()]);
-    setShowAddForm(false);
+    try {
+      // Basic image URL placeholder for now (upload needs cloud storage)
+      const imageUrl = newImage() ? URL.createObjectURL(newImage()) : '/src/assets/pic4.jpg';
+      
+      const res = await fetch('/api/rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newName(),
+          description: newDesc(),
+          price: parseFloat(newPrice()),
+          image: imageUrl,
+          isAvailable: true
+        })
+      });
+      
+      if (res.ok) {
+        const newRoom = await res.json();
+        setRooms([{ ...newRoom, image: newRoom.imageUrl }, ...rooms()]);
+        setShowAddForm(false);
+        // Reset form
+        setNewName(''); setNewDesc(''); setNewPrice(100); setNewImage(null);
+      } else {
+        alert('Failed to add room');
+      }
+    } catch (err) {
+      alert('An error occurred');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(`/api/rooms/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setRooms(rooms().filter(r => r.id !== id));
+      } else {
+        alert('Failed to delete room');
+      }
+    } catch (err) {
+      alert('An error occurred');
+    }
+  };
+
+  const toggleAvailability = async (id) => {
+    const room = rooms().find(r => r.id === id);
+    if (!room) return;
     
-    // Reset form
-    setNewName(''); setNewDesc(''); setNewPrice(100); setNewImage(null);
-  };
-
-  const handleDelete = (id) => {
-      setRooms(rooms().filter(r => r.id !== id));
-  };
-
-  const toggleAvailability = (id) => {
-      setRooms(rooms().map(r => r.id === id ? { ...r, isAvailable: !r.isAvailable } : r));
+    try {
+      const res = await fetch(`/api/rooms/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isAvailable: !room.isAvailable })
+      });
+      if (res.ok) {
+        setRooms(rooms().map(r => r.id === id ? { ...r, isAvailable: !r.isAvailable } : r));
+      } else {
+        alert('Failed to update availability');
+      }
+    } catch (err) {
+      alert('An error occurred');
+    }
   };
 
   return (

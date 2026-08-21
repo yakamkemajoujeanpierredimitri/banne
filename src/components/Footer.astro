@@ -1,0 +1,93 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+    <div class="container footer-grid">
+        <div class="footer-brand">
+            <h3>Albergobanne</h3>
+            <p>Experience unparalleled luxury and comfort in the heart of the city.</p>
+        </div>
+        
+        <div class="footer-contact">
+            <h4>Contact Us</h4>
+            <p>123 Luxury Avenue</p>
+            <p>Rome, Italy 00100</p>
+            <p><a href="mailto:info@albergobanne.com">info@albergobanne.com</a></p>
+            <p><a href="tel:+39061234567">+39 06 123 4567</a></p>
+        </div>
+        
+        <div class="footer-links">
+            <h4>Quick Links</h4>
+            <ul>
+                <li><a href="/rooms">Our Rooms</a></li>
+                <li><a href="/dashboard">My Account</a></li>
+                <li><a href="#">Terms & Conditions</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; {year} Albergobanne Hotel. All rights reserved.</p>
+    </div>
+</footer>
+
+<style>
+    .site-footer {
+        background-color: var(--primary);
+        color: white;
+        padding: 4rem 0 0 0;
+        margin-top: 4rem;
+    }
+    .footer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 3rem;
+        margin-bottom: 3rem;
+    }
+    .footer-brand h3 {
+        color: white;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    .footer-brand p {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .footer-contact h4, .footer-links h4 {
+        color: var(--secondary);
+        font-size: 1.2rem;
+        margin-bottom: 1.2rem;
+    }
+    .footer-contact p {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0.5rem;
+    }
+    .footer-contact a {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .footer-contact a:hover {
+        color: white;
+    }
+    .footer-links ul {
+        list-style: none;
+        padding: 0;
+    }
+    .footer-links li {
+        margin-bottom: 0.8rem;
+    }
+    .footer-links a {
+        color: rgba(255, 255, 255, 0.8);
+        transition: color 0.2s;
+    }
+    .footer-links a:hover {
+        color: white;
+        text-decoration: underline;
+    }
+    .footer-bottom {
+        background-color: rgba(0, 0, 0, 0.2);
+        text-align: center;
+        padding: 1.5rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+    }
+</style>

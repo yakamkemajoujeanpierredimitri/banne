@@ -2,30 +2,24 @@
 import Layout from '../../layouts/Layout.astro';
 import BookingWidget from '../../components/BookingWidget.jsx';
 import ImageGallery from '../../components/ImageGallery.jsx';
-
-export function getStaticPaths() {
-  // Mock IDs for the static generation
-  return [
-    { params: { id: '1' } },
-    { params: { id: '2' } },
-    { params: { id: '3' } }
-  ];
-}
+import { prisma } from '../../lib/prisma';
 
 const { id } = Astro.params;
 
-// Mock data mapping
-const roomsData = {
-  '1': { name: 'Deluxe Suite', price: 250, description: 'A gorgeous deluxe suite with a king-size bed, premium amenities, and a stunning view of the city skyline. Perfect for a romantic getaway.', images: ['/src/assets/pic4.jpg', '/src/assets/pic7.jpg'] },
-  '2': { name: 'Standard Room', price: 150, description: 'A cozy standard room featuring modern decor, a comfortable queen bed, and a spacious work desk for business travelers.', images: ['/src/assets/pic5.jpg', '/src/assets/pic8.jpg'] },
-  '3': { name: 'Family Room', price: 300, description: 'A massive family room equipped with two queen beds, a living area, and special welcome kits for children.', images: ['/src/assets/pic6.jpg', '/src/assets/pic2.jpg'] },
-};
+if (!id) {
+    return Astro.redirect('/404');
+}
 
-const room = roomsData[id];
+const room = await prisma.room.findUnique({
+  where: { id }
+});
 
 if (!room) {
     return Astro.redirect('/404');
 }
+
+// Temporary: create an array of images from the single imageUrl for the gallery
+const images = [room.imageUrl];
 ---
 
 <Layout title={`${room.name} - Albergobanne`}>
@@ -39,7 +33,7 @@ if (!room) {
         </header>
 
         <section class="gallery-section">
-            <ImageGallery client:load images={room.images} />
+            <ImageGallery client:load images={images} />
         </section>
 
         <section class="amenities">
@@ -55,7 +49,7 @@ if (!room) {
       </div>
 
       <aside class="sidebar">
-        <BookingWidget client:load price={room.price} />
+        <BookingWidget client:load price={room.price} roomId={room.id} />
       </aside>
 
     </div>

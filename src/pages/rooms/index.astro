@@ -1,18 +1,12 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { Image } from 'astro:assets';
+import { prisma } from '../../lib/prisma';
 
-// Importing all images for the mock data
-import pic4 from '../../assets/pic4.jpg';
-import pic5 from '../../assets/pic5.jpg';
-import pic6 from '../../assets/pic6.jpg';
-
-// Mock data since database is not connected yet
-const rooms = [
-  { id: '1', name: 'Deluxe Suite', price: 250, description: 'Spacious suite with city views.', image: pic4 },
-  { id: '2', name: 'Standard Room', price: 150, description: 'Comfortable room for two.', image: pic5 },
-  { id: '3', name: 'Family Room', price: 300, description: 'Perfect for families with kids.', image: pic6 },
-];
+// Fetch rooms from database
+const rooms = await prisma.room.findMany({
+  where: { isAvailable: true }
+});
 ---
 
 <Layout title="Our Rooms - Albergobanne">
@@ -26,7 +20,7 @@ const rooms = [
       {rooms.map(room => (
         <div class="room-card">
           <div class="img-wrapper">
-             <Image src={room.image} alt={room.name} class="room-img" />
+             <img src={room.imageUrl} alt={room.name} class="room-img" />
           </div>
           <div class="room-content">
             <h2>{room.name}</h2>

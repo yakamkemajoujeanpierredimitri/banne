@@ -1,0 +1,124 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { prisma } from '../lib/prisma';
+import { createSession } from '../lib/auth';
+import crypto from 'crypto'; // For simple hashing, though bcrypt is better for prod
+
+let error = '';
+
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  const email = data.get('email')?.toString();
+  const password = data.get('password')?.toString();
+
+  if (email && password) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    // In a real app, use bcrypt.compare
+    const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+    
+    if (user && user.password === passwordHash) {
+      const session = await createSession(user.id);
+      Astro.cookies.set('auth_session', session.id, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        expires: session.expiresAt
+      });
+      return Astro.redirect('/dashboard');
+    } else {
+      error = 'Invalid email or password';
+    }
+  } else {
+    error = 'Please fill out all fields';
+  }
+}
+---
+
+<Layout title="Login - Albergobanne">
+  <div class="auth-container container">
+    <div class="auth-card">
+      <h1>Welcome Back</h1>
+      <p>Log in to manage your bookings and account.</p>
+      
+      {error && <div class="error-alert">{error}</div>}
+      
+      <form method="POST" class="auth-form">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <button type="submit" class="btn">Log In</button>
+      </form>
+      <div class="auth-links">
+        <p>Don't have an account? <a href="/register">Register here</a></p>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding: 2rem;
+  }
+  .auth-card {
+    background: var(--surface);
+    padding: 3rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+  }
+  .auth-card h1 {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+  }
+  .auth-card p {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+  }
+  .error-alert {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+  }
+  .auth-form {
+    text-align: left;
+  }
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+  .auth-links a {
+    color: var(--primary);
+    font-weight: 600;
+  }
+</style>

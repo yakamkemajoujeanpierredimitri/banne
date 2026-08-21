@@ -1,11 +1,19 @@
-import { createSignal } from 'solid-js';
+import { createSignal, onMount } from 'solid-js';
 
 export default function AdminReservationsManager() {
-  const [reservations, setReservations] = createSignal([
-    { id: 'BKG-001', guestName: 'Jane Doe', room: 'Deluxe Suite', checkIn: '2026-09-10', checkOut: '2026-09-15', status: 'Paid', total: 1250 },
-    { id: 'BKG-002', guestName: 'John Smith', room: 'Standard Room', checkIn: '2026-09-12', checkOut: '2026-09-14', status: 'Pending', total: 300 },
-    { id: 'BKG-003', guestName: 'Emily Clark', room: 'Family Room', checkIn: '2026-10-01', checkOut: '2026-10-05', status: 'Paid', total: 1200 }
-  ]);
+  const [reservations, setReservations] = createSignal([]);
+
+  onMount(async () => {
+    try {
+      const res = await fetch('/api/bookings');
+      if (res.ok) {
+        const data = await res.json();
+        setReservations(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
 
   const [showModal, setShowModal] = createSignal(false);
   const [modalMode, setModalMode] = createSignal('add'); // 'add' or 'edit'
@@ -14,6 +22,7 @@ export default function AdminReservationsManager() {
   const [currentId, setCurrentId] = createSignal('');
   const [guestName, setGuestName] = createSignal('');
   const [room, setRoom] = createSignal('Standard Room');
+  const [roomId, setRoomId] = createSignal('');
   const [checkIn, setCheckIn] = createSignal('');
   const [checkOut, setCheckOut] = createSignal('');
   const [status, setStatus] = createSignal('Pending');
@@ -22,6 +31,7 @@ export default function AdminReservationsManager() {
     setModalMode('add');
     setGuestName('');
     setRoom('Standard Room');
+    setRoomId('');
     setCheckIn('');
     setCheckOut('');
     setStatus('Pending');
@@ -33,6 +43,7 @@ export default function AdminReservationsManager() {
     setCurrentId(res.id);
     setGuestName(res.guestName);
     setRoom(res.room);
+    setRoomId(res.roomId || '');
     setCheckIn(res.checkIn);
     setCheckOut(res.checkOut);
     setStatus(res.status);
@@ -41,25 +52,60 @@ export default function AdminReservationsManager() {
 
   const closeModal = () => setShowModal(false);
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     if (modalMode() === 'add') {
-      const newBkg = {
-        id: `BKG-00${reservations().length + 1}`,
-        guestName: guestName(),
-        room: room(),
-        checkIn: checkIn(),
-        checkOut: checkOut(),
-        status: status(),
-        total: 150 * 2 // placeholder math
-      };
-      setReservations([newBkg, ...reservations()]);
+      // Create new walk-in booking
+      try {
+        const res = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            guestName: guestName(), // The API doesn't handle this yet as it expects a user, but it's okay for now
+            roomId: roomId() || 'mock-room-id', 
+            checkIn: checkIn(),
+            checkOut: checkOut(),
+            status: status(),
+            userId: 'mock-user-id'
+          })
+        });
+        if (res.ok) {
+          const newBooking = await res.json();
+          // Ideally fetch again or manually format and add to list
+          const bkgFormatted = {
+            id: newBooking.id, guestName: guestName(), room: room(), checkIn: checkIn(), checkOut: checkOut(), status: status(), total: 0
+          };
+          setReservations([bkgFormatted, ...reservations()]);
+        } else {
+          alert('Failed to save booking');
+        }
+      } catch (err) {
+        alert('An error occurred');
+      }
     } else {
-      setReservations(reservations().map(res => 
-        res.id === currentId() 
-          ? { ...res, guestName: guestName(), room: room(), checkIn: checkIn(), checkOut: checkOut(), status: status() }
-          : res
-      ));
+      // Edit existing
+      try {
+        const res = await fetch(`/api/bookings/${currentId()}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: status(),
+            checkIn: checkIn(),
+            checkOut: checkOut(),
+          })
+        });
+        if (res.ok) {
+          setReservations(reservations().map(r => 
+            r.id === currentId() 
+              ? { ...r, guestName: guestName(), room: room(), checkIn: checkIn(), checkOut: checkOut(), status: status() }
+              : r
+          ));
+        } else {
+          alert('Failed to update booking');
+        }
+      } catch (err) {
+        alert('An error occurred');
+      }
     }
     closeModal();
   };
@@ -165,80 +211,6 @@ export default function AdminReservationsManager() {
       )}
 
       <style>{`
-        /* Table Styles from previous design */
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-        .section-header h2 {
-            font-size: 1.8rem;
-            color: var(--primary);
-        }
-        .table-container {
-            overflow-x: auto;
-        }
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-        .admin-table th, .admin-table td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-        .admin-table th {
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .admin-table tbody tr:hover {
-            background-color: var(--background);
-        }
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        .status-badge.paid {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-        .status-badge.pending {
-            background: #fff3e0;
-            color: #e65100;
-        }
-        .status-badge.cancelled {
-            background: #ffebee;
-            color: #c62828;
-        }
-        .action-btn {
-            background: transparent;
-            color: var(--primary);
-            font-weight: 600;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            transition: background 0.2s;
-            border: none;
-            cursor: pointer;
-        }
-        .action-btn:hover {
-            background: var(--border);
-        }
-        .btn-outline {
-            background: transparent;
-            color: var(--primary);
-            border: 1px solid var(--primary);
-        }
-        .btn-outline:hover {
-            background: var(--primary);
-            color: white;
-        }
-
         /* Modal Styles */
         .modal-overlay {
           position: fixed;

@@ -7,23 +7,43 @@ export default function BookingWidget(props) {
   const [guests, setGuests] = createSignal(1);
   const [status, setStatus] = createSignal('idle');
 
-  const handleBooking = (e) => {
+  const handleBooking = async (e) => {
     e.preventDefault();
     if (!checkIn() || !checkOut()) return alert('Please select dates.');
     
     setStatus('loading');
     
-    // Simulate API call since the database is not yet connected
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId: props.roomId,
+          checkIn: checkIn(),
+          checkOut: checkOut(),
+          // Mock userId for now, since auth is not yet implemented
+          userId: 'mock-user-id' 
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || 'Failed to book');
+        setStatus('idle');
+        return;
+      }
+      
       setStatus('success');
-      // Reset form after a bit
       setTimeout(() => {
         setStatus('idle');
         setCheckIn('');
         setCheckOut('');
         setGuests(1);
       }, 3000);
-    }, 1500);
+    } catch (err) {
+      alert('An error occurred while booking');
+      setStatus('idle');
+    }
   };
 
   return (

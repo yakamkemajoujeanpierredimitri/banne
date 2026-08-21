@@ -14,10 +14,12 @@
   "dependencies": {
     "@astrojs/node": "^11.1.2",
     "@astrojs/solid-js": "^7.0.2",
+    "@prisma/client": "^6.12.0",
     "astro": "^7.2.2",
+    "dotenv": "^17.4.2",
     "solid-js": "^1.9.14"
   },
   "devDependencies": {
-    "prisma": "^7.9.1"
+    "prisma": "^6.12.0"
   }
 }

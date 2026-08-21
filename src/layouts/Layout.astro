@@ -1,14 +1,21 @@
 ---
 import '../styles/global.css';
 import LanguagePicker from '../components/LanguagePicker.astro';
+import Footer from '../components/Footer.astro';
+import { getLangFromUrl, useTranslations, useTranslatedPath } from '../i18n/utils';
+
 interface Props {
 	title: string;
+	description?: string;
 }
 
-const { title } = Astro.props;
+const { title, description = "Experience unparalleled luxury and comfort at Albergobanne Hotel." } = Astro.props;
+const currentLocale = Astro.currentLocale || getLangFromUrl(Astro.url);
+const t = useTranslations(currentLocale as any);
+const translatePath = useTranslatedPath(currentLocale as any);
 ---
 <!doctype html>
-<html lang="en">
+<html lang={currentLocale}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
@@ -16,20 +23,44 @@ const { title } = Astro.props;
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content="website" />
 	</head>
 	<body>
 		<nav class="container nav-bar">
 			<a href="/" class="logo-text">Albergobanne</a>
-			<div class="nav-links">
-				<a href="/rooms">Rooms</a>
-				<a href="/admin/dashboard" class="admin-link">Admin</a>
-				<a href="/dashboard" class="user-link">My Account</a>
+			
+			<button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle menu">
+				<span></span>
+				<span></span>
+				<span></span>
+			</button>
+			
+			<div class="nav-links" id="nav-links">
+				<a href={translatePath('/rooms')}>{t('nav.rooms')}</a>
+				<a href={translatePath('/admin/dashboard')} class="admin-link">{t('nav.admin')}</a>
+				<a href={translatePath('/dashboard')} class="user-link">{t('nav.account')}</a>
                 <LanguagePicker />
 			</div>
 		</nav>
 		<main>
 			<slot />
 		</main>
+		<Footer />
+
+		<script>
+			const btn = document.getElementById('mobile-menu-btn');
+			const links = document.getElementById('nav-links');
+			
+			if (btn && links) {
+				btn.addEventListener('click', () => {
+					links.classList.toggle('active');
+					btn.classList.toggle('open');
+				});
+			}
+		</script>
 	</body>
 </html>
 
@@ -66,5 +97,62 @@ const { title } = Astro.props;
 	.user-link:hover {
 		background: var(--secondary);
 		color: white !important;
+	}
+	
+	.mobile-menu-btn {
+		display: none;
+		flex-direction: column;
+		justify-content: space-around;
+		width: 30px;
+		height: 25px;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		z-index: 100;
+	}
+	
+	.mobile-menu-btn span {
+		width: 30px;
+		height: 3px;
+		background: var(--primary);
+		border-radius: 10px;
+		transition: all 0.3s linear;
+		position: relative;
+		transform-origin: 1px;
+	}
+	
+	@media (max-width: 768px) {
+		.mobile-menu-btn {
+			display: flex;
+		}
+		
+		.nav-links {
+			display: none;
+			flex-direction: column;
+			position: absolute;
+			top: 70px;
+			left: 0;
+			right: 0;
+			background: white;
+			padding: 2rem;
+			box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+			z-index: 99;
+			border-top: 1px solid var(--border);
+		}
+		
+		.nav-links.active {
+			display: flex;
+		}
+		
+		.mobile-menu-btn.open span:nth-child(1) {
+			transform: rotate(45deg);
+		}
+		.mobile-menu-btn.open span:nth-child(2) {
+			opacity: 0;
+		}
+		.mobile-menu-btn.open span:nth-child(3) {
+			transform: rotate(-45deg);
+		}
 	}
 </style>

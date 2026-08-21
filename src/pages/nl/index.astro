@@ -3,129 +3,40 @@ import Layout from '../../layouts/Layout.astro';
 import { Image } from 'astro:assets';
 import logoImg from '../../assets/logo.jpg';
 import heroImg from '../../assets/pic2.jpg';
+import { getLangFromUrl, useTranslations, useTranslatedPath } from '../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
 ---
 
-<Layout title="Hotel Albergobanne - Luxe Wacht Op U">
+<Layout title="Albergobanne Hotel - Luxe Wacht Op U">
 	<div class="hero">
 		<Image src={heroImg} alt="Hotel Hero" class="hero-bg" />
 		<div class="hero-overlay"></div>
 		<div class="hero-content container">
 			<Image src={logoImg} alt="Albergobanne Logo" class="logo" />
-			<h1>Welkom bij Albergobanne</h1>
-			<p>Ervaar ongeëvenaarde luxe en comfort in het hart van de stad.</p>
-			<a href="/nl/rooms" class="btn">Bekijk Onze Kamers</a>
+			<h1>{t('hero.title')}</h1>
+			<p>{t('hero.subtitle')}</p>
+			<a href={translatePath('/rooms')} class="btn">{t('hero.cta')}</a>
 		</div>
 	</div>
 
 	<section class="container features">
-		<h2>Waarom Voor Ons Kiezen?</h2>
+		<h2>{t('features.title')}</h2>
 		<div class="feature-grid">
 			<div class="feature-card">
-				<h3>Premium Kamers</h3>
-				<p>Ontspan in onze elegant ontworpen suites, voorzien van topvoorzieningen.</p>
+				<h3>{t('feature.1.title')}</h3>
+				<p>{t('feature.1.desc')}</p>
 			</div>
 			<div class="feature-card">
-				<h3>Gastronomie</h3>
-				<p>Proef de wereld met onze gastronomische chef-koks en exclusieve restaurantmenu's.</p>
+				<h3>{t('feature.2.title')}</h3>
+				<p>{t('feature.2.desc')}</p>
 			</div>
 			<div class="feature-card">
-				<h3>Spa & Wellness</h3>
-				<p>Verjong uw lichaam en geest in ons ultramoderne wellnesscentrum.</p>
+				<h3>{t('feature.3.title')}</h3>
+				<p>{t('feature.3.desc')}</p>
 			</div>
 		</div>
 	</section>
 </Layout>
-
-<style>
-	.hero {
-		position: relative;
-		height: 80vh;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		text-align: center;
-		color: white;
-		margin-top: -80px; /* offset the nav bar */
-		padding-top: 80px;
-	}
-	.hero-bg {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		z-index: -2;
-	}
-	.hero-overlay {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background: rgba(0, 0, 0, 0.6);
-		z-index: -1;
-	}
-	.hero-content {
-		z-index: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 1.5rem;
-	}
-	.logo {
-		width: 120px;
-		height: 120px;
-		border-radius: 50%;
-		object-fit: cover;
-		margin-bottom: 1rem;
-		border: 4px solid white;
-		box-shadow: var(--shadow);
-	}
-	.hero h1 {
-		font-size: clamp(2.5rem, 5vw, 4.5rem);
-		color: white;
-		margin-bottom: 0.5rem;
-		letter-spacing: -0.02em;
-	}
-	.hero p {
-		font-size: clamp(1.2rem, 3vw, 1.5rem);
-		margin-bottom: 2rem;
-		max-width: 600px;
-		color: rgba(255,255,255,0.9);
-	}
-	.features {
-		padding: 6rem 1.5rem;
-		text-align: center;
-	}
-	.features h2 {
-		font-size: 2.5rem;
-		margin-bottom: 3rem;
-		color: var(--primary);
-	}
-	.feature-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: 2.5rem;
-	}
-	.feature-card {
-		background: var(--surface);
-		padding: 2.5rem 2rem;
-		border-radius: var(--radius);
-		box-shadow: var(--shadow);
-		border: 1px solid var(--border);
-		transition: transform 0.3s ease, box-shadow 0.3s ease;
-	}
-	.feature-card:hover {
-		transform: translateY(-5px);
-		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-	}
-	.feature-card h3 {
-		font-size: 1.5rem;
-		margin-bottom: 1rem;
-		color: var(--primary);
-	}
-	.feature-card p {
-		color: var(--text-muted);
-	}
-</style>
