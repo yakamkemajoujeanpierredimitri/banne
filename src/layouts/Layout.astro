@@ -27,6 +27,7 @@ const translatePath = useTranslatedPath(currentLocale as any);
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
 		<meta property="og:type" content="website" />
+		<slot name="head" />
 	</head>
 	<body>
 		<nav class="container nav-bar">

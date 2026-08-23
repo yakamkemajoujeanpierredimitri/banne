@@ -1,4 +1,6 @@
-import { createSignal } from 'solid-js';
+import { createSignal, onMount } from 'solid-js';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 import '../styles/global.css';
 
 export default function BookingWidget(props) {
@@ -6,6 +8,37 @@ export default function BookingWidget(props) {
   const [checkOut, setCheckOut] = createSignal('');
   const [guests, setGuests] = createSignal(1);
   const [status, setStatus] = createSignal('idle');
+
+  let checkInRef;
+  let checkOutRef;
+
+  onMount(() => {
+    const disabledDates = (props.blockedDates || []).map(b => ({
+      from: b.from,
+      to: b.to
+    }));
+
+    const checkInPicker = flatpickr(checkInRef, {
+      minDate: "today",
+      disable: disabledDates,
+      onChange: (selectedDates, dateStr) => {
+        setCheckIn(dateStr);
+        if (selectedDates.length > 0) {
+           const nextDay = new Date(selectedDates[0]);
+           nextDay.setDate(nextDay.getDate() + 1);
+           checkOutPicker.set('minDate', nextDay);
+        }
+      }
+    });
+
+    const checkOutPicker = flatpickr(checkOutRef, {
+      minDate: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // tomorrow
+      disable: disabledDates,
+      onChange: (selectedDates, dateStr) => {
+        setCheckOut(dateStr);
+      }
+    });
+  });
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -33,13 +66,27 @@ export default function BookingWidget(props) {
         return;
       }
       
-      setStatus('success');
-      setTimeout(() => {
+      const bookingData = await response.json();
+
+      // Create checkout session
+      const checkoutResponse = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: bookingData.id })
+      });
+
+      if (!checkoutResponse.ok) {
+        const error = await checkoutResponse.json();
+        alert(error.error || 'Failed to initialize payment');
         setStatus('idle');
-        setCheckIn('');
-        setCheckOut('');
-        setGuests(1);
-      }, 3000);
+        return;
+      }
+
+      const checkoutData = await checkoutResponse.json();
+      
+      setStatus('success');
+      // Redirect to Stripe Checkout
+      window.location.href = checkoutData.url;
     } catch (err) {
       alert('An error occurred while booking');
       setStatus('idle');
@@ -60,10 +107,10 @@ export default function BookingWidget(props) {
           <div class="form-group">
             <label for="check-in">Check-in Date</label>
             <input 
-              type="date" 
+              type="text" 
               id="check-in" 
-              value={checkIn()} 
-              onInput={(e) => setCheckIn(e.target.value)} 
+              ref={checkInRef}
+              placeholder="Select Date..."
               required 
             />
           </div>
@@ -71,10 +118,10 @@ export default function BookingWidget(props) {
           <div class="form-group">
             <label for="check-out">Check-out Date</label>
             <input 
-              type="date" 
+              type="text" 
               id="check-out" 
-              value={checkOut()} 
-              onInput={(e) => setCheckOut(e.target.value)} 
+              ref={checkOutRef}
+              placeholder="Select Date..."
               required 
             />
           </div>

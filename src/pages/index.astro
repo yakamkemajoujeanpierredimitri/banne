@@ -4,13 +4,47 @@ import { Image } from 'astro:assets';
 import logoImg from '../assets/logo.jpg';
 import heroImg from '../assets/pic2.jpg';
 import { getLangFromUrl, useTranslations, useTranslatedPath } from '../i18n/utils';
+import { prisma } from '../lib/prisma';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const translatePath = useTranslatedPath(lang);
+
+let reviews = await prisma.review.findMany({
+	take: 3,
+	orderBy: { createdAt: 'desc' },
+	include: { room: true }
+});
+
+if (reviews.length === 0) {
+	// Fallback mock reviews
+	reviews = [
+		{ id: '1', rating: 5, comment: 'Absolutely wonderful experience. The room was pristine and the service was impeccable.', guestName: 'Sarah M.', room: { name: 'Deluxe Suite' }, createdAt: new Date() } as any,
+		{ id: '2', rating: 5, comment: 'A perfect getaway. The views are stunning and the amenities are top-notch.', guestName: 'James L.', room: { name: 'Ocean View Room' }, createdAt: new Date() } as any,
+		{ id: '3', rating: 4, comment: 'Great location and very comfortable beds. Would definitely stay here again.', guestName: 'Elena R.', room: { name: 'Standard Room' }, createdAt: new Date() } as any,
+	];
+}
 ---
 
 <Layout title="Albergobanne Hotel - Il Lusso ti Aspetta">
+	<script type="application/ld+json" slot="head" set:html={JSON.stringify({
+		"@context": "https://schema.org",
+		"@type": "Hotel",
+		"name": "Albergobanne Hotel",
+		"description": t('hero.subtitle'),
+		"address": {
+			"@type": "PostalAddress",
+			"streetAddress": "123 Luxury Avenue",
+			"addressLocality": "Rome",
+			"addressRegion": "RM",
+			"postalCode": "00100",
+			"addressCountry": "IT"
+		},
+		"telephone": "+39 06 123 4567",
+		"email": "info@albergobanne.com",
+		"image": new URL(heroImg.src, Astro.url).href,
+		"url": Astro.url.href
+	})} />
 	<div class="hero">
 		<Image src={heroImg} alt="Hotel Hero" class="hero-bg" />
 		<div class="hero-overlay"></div>
@@ -37,6 +71,22 @@ const translatePath = useTranslatedPath(lang);
 				<h3>{t('feature.3.title')}</h3>
 				<p>{t('feature.3.desc')}</p>
 			</div>
+		</div>
+	</section>
+	
+	<section class="container testimonials" style="margin-top: 4rem; padding-top: 4rem; border-top: 1px solid var(--border);">
+		<h2 style="text-align: center; margin-bottom: 2rem;">Guest Reviews</h2>
+		<div class="feature-grid">
+			{reviews.map(review => (
+				<div class="feature-card" style="text-align: left;">
+					<div style="color: #FFD700; font-size: 1.2rem; margin-bottom: 0.5rem;">
+						{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
+					</div>
+					<p style="font-style: italic; margin-bottom: 1rem;">"{review.comment}"</p>
+					<p style="font-weight: bold; margin: 0;">- {review.guestName}</p>
+					<p style="font-size: 0.8rem; color: #666; margin: 0;">Stayed in: {review.room.name}</p>
+				</div>
+			))}
 		</div>
 	</section>
 </Layout>

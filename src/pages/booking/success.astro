@@ -1,0 +1,68 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getLangFromUrl, useTranslations, useTranslatedPath } from '../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
+---
+
+<Layout title="Booking Successful | Albergobanne Hotel">
+	<div class="container message-container">
+		<div class="success-icon">✓</div>
+		<h1>Payment Successful!</h1>
+		<p>Thank you for booking with Albergobanne Hotel. Your reservation is confirmed.</p>
+		<p>We look forward to welcoming you.</p>
+		
+		<div class="actions">
+			<a href={translatePath('/dashboard')} class="btn">View My Bookings</a>
+			<a href={translatePath('/')} class="btn btn-outline">Return to Home</a>
+		</div>
+	</div>
+</Layout>
+
+<style>
+	.message-container {
+		text-align: center;
+		padding: 6rem 1rem;
+		max-width: 600px;
+		margin: 0 auto;
+	}
+	.success-icon {
+		background: #4CAF50;
+		color: white;
+		width: 80px;
+		height: 80px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 40px;
+		margin: 0 auto 2rem;
+	}
+	h1 {
+		font-size: 2.5rem;
+		margin-bottom: 1rem;
+		color: var(--primary);
+	}
+	p {
+		font-size: 1.1rem;
+		margin-bottom: 1rem;
+		color: #555;
+	}
+	.actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		margin-top: 3rem;
+	}
+	.btn-outline {
+		background: transparent;
+		border: 2px solid var(--primary);
+		color: var(--primary);
+	}
+	.btn-outline:hover {
+		background: var(--primary);
+		color: white;
+	}
+</style>

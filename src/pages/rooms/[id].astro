@@ -20,6 +20,20 @@ if (!room) {
 
 // Temporary: create an array of images from the single imageUrl for the gallery
 const images = [room.imageUrl];
+
+const existingBookings = await prisma.booking.findMany({
+    where: { 
+        roomId: room.id,
+        status: { not: 'Cancelled' },
+        checkOutDate: { gte: new Date() }
+    },
+    select: { checkInDate: true, checkOutDate: true }
+});
+
+const blockedDates = existingBookings.map(b => ({
+    from: b.checkInDate.toISOString().split('T')[0],
+    to: b.checkOutDate.toISOString().split('T')[0]
+}));
 ---
 
 <Layout title={`${room.name} - Albergobanne`}>
@@ -38,18 +52,20 @@ const images = [room.imageUrl];
 
         <section class="amenities">
             <h2>Room Amenities</h2>
-            <ul>
-                <li>Free High-Speed Wi-Fi</li>
-                <li>Flat-screen TV with streaming services</li>
-                <li>Mini-bar & Coffee maker</li>
-                <li>Premium bath products</li>
-                <li>24/7 Room Service</li>
-            </ul>
+            {room.amenities && room.amenities.length > 0 ? (
+                <ul>
+                    {room.amenities.map(amenity => (
+                        <li>{amenity}</li>
+                    ))}
+                </ul>
+            ) : (
+                <p>No specific amenities listed for this room.</p>
+            )}
         </section>
       </div>
 
       <aside class="sidebar">
-        <BookingWidget client:load price={room.price} roomId={room.id} />
+        <BookingWidget client:load price={room.price} roomId={room.id} blockedDates={blockedDates} />
       </aside>
 
     </div>

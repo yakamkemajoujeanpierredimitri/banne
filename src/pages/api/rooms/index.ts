@@ -29,6 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
         description: data.description,
         price: Number(data.price),
         imageUrl: data.image || '/src/assets/pic4.jpg',
+        amenities: data.amenities || [],
         isAvailable: data.isAvailable !== undefined ? data.isAvailable : true,
       }
     });

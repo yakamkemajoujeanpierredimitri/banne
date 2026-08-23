@@ -1,0 +1,68 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getLangFromUrl, useTranslations, useTranslatedPath } from '../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
+---
+
+<Layout title="Booking Cancelled | Albergobanne Hotel">
+	<div class="container message-container">
+		<div class="cancel-icon">✕</div>
+		<h1>Payment Cancelled</h1>
+		<p>Your payment was cancelled and your booking has not been completed.</p>
+		<p>If you experienced an issue, please try again or contact support.</p>
+		
+		<div class="actions">
+			<a href={translatePath('/rooms')} class="btn">Browse Rooms Again</a>
+			<a href={translatePath('/contact')} class="btn btn-outline">Contact Support</a>
+		</div>
+	</div>
+</Layout>
+
+<style>
+	.message-container {
+		text-align: center;
+		padding: 6rem 1rem;
+		max-width: 600px;
+		margin: 0 auto;
+	}
+	.cancel-icon {
+		background: #f44336;
+		color: white;
+		width: 80px;
+		height: 80px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 40px;
+		margin: 0 auto 2rem;
+	}
+	h1 {
+		font-size: 2.5rem;
+		margin-bottom: 1rem;
+		color: var(--primary);
+	}
+	p {
+		font-size: 1.1rem;
+		margin-bottom: 1rem;
+		color: #555;
+	}
+	.actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		margin-top: 3rem;
+	}
+	.btn-outline {
+		background: transparent;
+		border: 2px solid var(--primary);
+		color: var(--primary);
+	}
+	.btn-outline:hover {
+		background: var(--primary);
+		color: white;
+	}
+</style>

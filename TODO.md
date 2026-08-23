@@ -65,7 +65,7 @@ These improve quality, usability, and SEO significantly.
 - [x] Add `<meta name="description">` per page
 - [x] Add Open Graph tags (`og:title`, `og:image`, `og:description`, `og:url`)
 - [x] Fix `<html lang="en">` → use `Astro.currentLocale` dynamically
-- [ ] Add JSON-LD structured data for `Hotel` / `LodgingBusiness` schema on the homepage
+- [x] Add JSON-LD structured data for `Hotel` / `LodgingBusiness` schema on the homepage
 
 ### 2.4 Complete the Internationalization (i18n)
 - [x] Create `src/i18n/ui.ts` with translation dictionaries for IT, EN, FR, NL
@@ -86,17 +86,17 @@ These improve quality, usability, and SEO significantly.
 These add real business value to the hotel website.
 
 ### 3.1 Payment Integration (Stripe)
-- [ ] Install `stripe` package
-- [ ] Create `src/pages/api/checkout.ts` — creates a Stripe Checkout session
-- [ ] After successful booking, redirect to Stripe payment page
-- [ ] Create `src/pages/booking/success.astro` and `src/pages/booking/cancel.astro` return pages
-- [ ] Add a Stripe webhook endpoint to update booking status to "Paid" automatically
+- [x] Install `stripe` package
+- [x] Create `src/pages/api/checkout.ts` — creates a Stripe Checkout session
+- [x] After successful booking, redirect to Stripe payment page
+- [x] Create `src/pages/booking/success.astro` and `src/pages/booking/cancel.astro` return pages
+- [x] Add a Stripe webhook endpoint to update booking status to "Paid" automatically
 
 ### 3.2 Booking Confirmation Emails
-- [ ] Install `resend` (or another email provider)
-- [ ] Send a confirmation email to the guest after booking
-- [ ] Send a notification email to the hotel admin for every new booking
-- [ ] Include booking details: room name, dates, guest name, booking ID
+- [x] Install `resend` (or another email provider)
+- [x] Send a confirmation email to the guest after booking
+- [x] Send a notification email to the hotel admin for every new booking
+- [x] Include booking details: room name, dates, guest name, booking ID
 
 ### 3.3 Contact Page
 - [x] Create `src/pages/contact.astro`
@@ -105,25 +105,25 @@ These add real business value to the hotel website.
 - [x] Optionally add a contact form that sends an email via the API
 
 ### 3.4 Reviews / Testimonials
-- [ ] Add a testimonials section to the homepage (can be static initially)
-- [ ] Later: add a `Review` model to Prisma (rating, comment, guestName, roomId)
-- [ ] Allow guests to leave reviews after their stay
+- [x] Add a testimonials section to the homepage (can be static initially)
+- [x] Later: add a `Review` model to Prisma (rating, comment, guestName, roomId)
+- [x] Allow guests to leave reviews after their stay
 
 ### 3.5 Availability Calendar
-- [ ] On the room detail page, show a visual calendar with available/booked dates
-- [ ] Query existing `Booking` records for that room to determine blocked dates
-- [ ] Disable already-booked dates in the booking widget date picker
+- [x] On the room detail page, show a visual calendar with available/booked dates
+- [x] Query existing `Booking` records for that room to determine blocked dates
+- [x] Disable already-booked dates in the booking widget date picker
 
 ### 3.6 Per-Room Amenities
-- [ ] Add an `amenities` field to the `Room` model (either JSON array or a separate `Amenity` model)
-- [ ] Replace the hardcoded amenities list in `rooms/[id].astro` with data from the database
-- [ ] Let admins manage amenities per room in the admin panel
+- [x] Add an `amenities` field to the `Room` model (either JSON array or a separate `Amenity` model)
+- [x] Replace the hardcoded amenities list in `rooms/[id].astro` with data from the database
+- [x] Let admins manage amenities per room in the admin panel
 
 ### 3.7 Proper Image Upload (Cloud Storage)
-- [ ] Set up cloud storage (Cloudflare R2, AWS S3, or Cloudinary)
-- [ ] Create `src/pages/api/upload.ts` endpoint for image uploads
-- [ ] Update the admin "Add Room" form to upload images to cloud storage and save the URL
-- [ ] Currently `AdminRoomsManager.jsx` uses `URL.createObjectURL` which is lost on refresh
+- [x] Set up cloud storage (Cloudflare R2, AWS S3, or Cloudinary)
+- [x] Create `src/pages/api/upload.ts` endpoint for image uploads
+- [x] Update the admin "Add Room" form to upload images to cloud storage and save the URL
+- [x] Currently `AdminRoomsManager.jsx` uses `URL.createObjectURL` which is lost on refresh
 
 ### 3.8 Error Pages
 - [x] Create `src/pages/404.astro` — custom "Page Not Found" page

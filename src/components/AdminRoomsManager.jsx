@@ -25,6 +25,7 @@ export default function AdminRoomsManager() {
   const [newDesc, setNewDesc] = createSignal('');
   const [newPrice, setNewPrice] = createSignal(100);
   const [newImage, setNewImage] = createSignal(null);
+  const [newAmenities, setNewAmenities] = createSignal('');
 
   const filteredRooms = createMemo(() => {
     return rooms().filter(room => 
@@ -36,8 +37,26 @@ export default function AdminRoomsManager() {
   const handleAddRoom = async (e) => {
     e.preventDefault();
     try {
-      // Basic image URL placeholder for now (upload needs cloud storage)
-      const imageUrl = newImage() ? URL.createObjectURL(newImage()) : '/src/assets/pic4.jpg';
+      let imageUrl = '/src/assets/pic4.jpg';
+      
+      if (newImage()) {
+        const formData = new FormData();
+        formData.append('image', newImage());
+        
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          imageUrl = uploadData.url;
+        } else {
+          alert('Failed to upload image. Using default.');
+        }
+      }
+
+      const amenitiesList = newAmenities().split(',').map(a => a.trim()).filter(a => a);
       
       const res = await fetch('/api/rooms', {
         method: 'POST',
@@ -47,6 +66,7 @@ export default function AdminRoomsManager() {
           description: newDesc(),
           price: parseFloat(newPrice()),
           image: imageUrl,
+          amenities: amenitiesList,
           isAvailable: true
         })
       });
@@ -56,7 +76,7 @@ export default function AdminRoomsManager() {
         setRooms([{ ...newRoom, image: newRoom.imageUrl }, ...rooms()]);
         setShowAddForm(false);
         // Reset form
-        setNewName(''); setNewDesc(''); setNewPrice(100); setNewImage(null);
+        setNewName(''); setNewDesc(''); setNewPrice(100); setNewImage(null); setNewAmenities('');
       } else {
         alert('Failed to add room');
       }
@@ -124,6 +144,10 @@ export default function AdminRoomsManager() {
               <textarea required value={newDesc()} onInput={e => setNewDesc(e.target.value)} rows="3"></textarea>
             </div>
             <div class="form-group full-width">
+              <label>Amenities (comma separated)</label>
+              <input type="text" value={newAmenities()} onInput={e => setNewAmenities(e.target.value)} placeholder="Wi-Fi, TV, Mini-bar" />
+            </div>
+            <div class="form-group full-width">
               <label>Room Picture</label>
               <input type="file" accept="image/*" onChange={e => setNewImage(e.target.files[0])} />
             </div>
@@ -154,6 +178,9 @@ export default function AdminRoomsManager() {
               <h4>{room.name}</h4>
               <p class="price">${room.price} / night</p>
               <p class="desc">{room.description}</p>
+              <p class="amenities" style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">
+                <strong>Amenities:</strong> {room.amenities && room.amenities.length > 0 ? room.amenities.join(', ') : 'None'}
+              </p>
             </div>
             <div class="room-actions">
                 <button 

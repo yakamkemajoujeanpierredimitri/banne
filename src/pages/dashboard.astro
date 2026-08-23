@@ -64,7 +64,11 @@ const bookings = rawBookings.map(b => ({
                                     <p><strong>Check-out:</strong> {booking.checkOut}</p>
                                     <div class="booking-actions">
                                         <button class="btn btn-outline">View Details</button>
-                                        <button class="btn btn-danger">Cancel Stay</button>
+                                        {booking.status === 'Paid' ? (
+                                            <a href={`/review/${booking.id}`} class="btn btn-outline" style="border-color: #FFD700; color: #b89b00;">Leave Review</a>
+                                        ) : (
+                                            <button class="btn btn-danger">Cancel Stay</button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
