@@ -1,7 +1,10 @@
 import type { APIRoute } from 'astro';
 import { prisma } from '../../../lib/prisma';
 
-export const GET: APIRoute = async ({ params }) => {
+export const GET: APIRoute = async ({ params, locals }) => {
+  const user = locals.user;
+  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+
   const { id } = params;
   if (!id) return new Response(null, { status: 400 });
 
@@ -11,6 +14,9 @@ export const GET: APIRoute = async ({ params }) => {
       include: { room: true, user: true }
     });
     if (!booking) return new Response(null, { status: 404 });
+    if (booking.userId !== user.id && user.role !== 'ADMIN') {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    }
     return new Response(JSON.stringify(booking), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -20,11 +26,19 @@ export const GET: APIRoute = async ({ params }) => {
   }
 }
 
-export const DELETE: APIRoute = async ({ params }) => {
+export const DELETE: APIRoute = async ({ params, locals }) => {
+  const user = locals.user;
+  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+
   const { id } = params;
   if (!id) return new Response(null, { status: 400 });
 
   try {
+    const booking = await prisma.booking.findUnique({ where: { id } });
+    if (!booking) return new Response(null, { status: 404 });
+    if (booking.userId !== user.id && user.role !== 'ADMIN') {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    }
     await prisma.booking.delete({
       where: { id }
     });
@@ -34,11 +48,20 @@ export const DELETE: APIRoute = async ({ params }) => {
   }
 }
 
-export const PUT: APIRoute = async ({ params, request }) => {
+export const PUT: APIRoute = async ({ params, request, locals }) => {
+  const user = locals.user;
+  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+
   const { id } = params;
   if (!id) return new Response(null, { status: 400 });
 
   try {
+    const bookingToUpdate = await prisma.booking.findUnique({ where: { id } });
+    if (!bookingToUpdate) return new Response(null, { status: 404 });
+    if (bookingToUpdate.userId !== user.id && user.role !== 'ADMIN') {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    }
+
     const data = await request.json();
     
     // Allow updating status, dates, etc.

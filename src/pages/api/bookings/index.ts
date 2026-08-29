@@ -37,8 +37,13 @@ export const GET: APIRoute = async () => {
   }
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
+    const user = locals.user;
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+
     const data = await request.json();
     
     // Simple validation
@@ -75,7 +80,7 @@ export const POST: APIRoute = async ({ request }) => {
         checkOutDate: checkOut,
         status: data.status || 'Pending',
         roomId: data.roomId,
-        userId: data.userId, // We'll need a real user ID here in a complete system
+        userId: user.id, // Use authenticated user
       }
     });
     

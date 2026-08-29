@@ -20,8 +20,12 @@ export const GET: APIRoute = async () => {
   }
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
+    const user = locals.user;
+    if (!user || user.role !== 'ADMIN') {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
     const data = await request.json();
     const room = await prisma.room.create({
       data: {

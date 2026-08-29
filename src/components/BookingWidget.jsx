@@ -42,6 +42,11 @@ export default function BookingWidget(props) {
 
   const handleBooking = async (e) => {
     e.preventDefault();
+    if (!props.userId) {
+      window.location.href = '/login';
+      return;
+    }
+    
     if (!checkIn() || !checkOut()) return alert('Please select dates.');
     
     setStatus('loading');
@@ -54,8 +59,7 @@ export default function BookingWidget(props) {
           roomId: props.roomId,
           checkIn: checkIn(),
           checkOut: checkOut(),
-          // Mock userId for now, since auth is not yet implemented
-          userId: 'mock-user-id' 
+          userId: props.userId 
         })
       });
       

@@ -65,7 +65,7 @@ const blockedDates = existingBookings.map(b => ({
       </div>
 
       <aside class="sidebar">
-        <BookingWidget client:load price={room.price} roomId={room.id} blockedDates={blockedDates} />
+        <BookingWidget client:load price={room.price} roomId={room.id} blockedDates={blockedDates} userId={Astro.locals.user?.id} />
       </aside>
 
     </div>

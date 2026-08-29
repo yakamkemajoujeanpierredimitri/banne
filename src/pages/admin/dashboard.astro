@@ -1,6 +1,26 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import AdminReservationsManager from '../../components/AdminReservationsManager.jsx';
+import { prisma } from '../../lib/prisma';
+
+// Calculate total reservations
+const totalReservations = await prisma.booking.count();
+
+// Calculate pending payments
+const pendingPayments = await prisma.booking.count({
+    where: { status: 'Pending' }
+});
+
+// Calculate occupancy rate (active bookings today / total rooms)
+const totalRooms = await prisma.room.count();
+const activeBookings = await prisma.booking.count({
+    where: { 
+        status: { not: 'Cancelled' },
+        checkInDate: { lte: new Date() },
+        checkOutDate: { gte: new Date() }
+    }
+});
+const occupancyRate = totalRooms > 0 ? Math.round((activeBookings / totalRooms) * 100) : 0;
 ---
 
 <Layout title="Admin Dashboard - Albergobanne">
@@ -23,15 +43,15 @@ import AdminReservationsManager from '../../components/AdminReservationsManager.
                 <section class="metrics-grid">
                     <div class="metric-card">
                         <h3>Total Reservations</h3>
-                        <p class="metric-value">24</p>
+                        <p class="metric-value">{totalReservations}</p>
                     </div>
                     <div class="metric-card">
                         <h3>Pending Payments</h3>
-                        <p class="metric-value">5</p>
+                        <p class="metric-value">{pendingPayments}</p>
                     </div>
                     <div class="metric-card">
                         <h3>Occupancy Rate</h3>
-                        <p class="metric-value">85%</p>
+                        <p class="metric-value">{occupancyRate}%</p>
                     </div>
                 </section>
 

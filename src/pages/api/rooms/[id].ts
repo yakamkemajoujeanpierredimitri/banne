@@ -19,7 +19,10 @@ export const GET: APIRoute = async ({ params }) => {
   }
 }
 
-export const DELETE: APIRoute = async ({ params }) => {
+export const DELETE: APIRoute = async ({ params, locals }) => {
+  const user = locals.user;
+  if (!user || user.role !== 'ADMIN') return new Response(null, { status: 401 });
+
   const { id } = params;
   if (!id) return new Response(null, { status: 400 });
 
@@ -33,7 +36,10 @@ export const DELETE: APIRoute = async ({ params }) => {
   }
 }
 
-export const PUT: APIRoute = async ({ params, request }) => {
+export const PUT: APIRoute = async ({ params, request, locals }) => {
+  const user = locals.user;
+  if (!user || user.role !== 'ADMIN') return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+
   const { id } = params;
   if (!id) return new Response(null, { status: 400 });
 
