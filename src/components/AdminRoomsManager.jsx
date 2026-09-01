@@ -19,6 +19,7 @@ export default function AdminRoomsManager() {
   const [search, setSearch] = createSignal('');
   const [maxPrice, setMaxPrice] = createSignal(1000);
   const [showAddForm, setShowAddForm] = createSignal(false);
+  const [isSaving, setIsSaving] = createSignal(false);
 
   // New room form state
   const [newName, setNewName] = createSignal('');
@@ -36,6 +37,7 @@ export default function AdminRoomsManager() {
 
   const handleAddRoom = async (e) => {
     e.preventDefault();
+    setIsSaving(true);
     try {
       let imageUrl = '/src/assets/pic4.jpg';
       
@@ -82,6 +84,8 @@ export default function AdminRoomsManager() {
       }
     } catch (err) {
       alert('An error occurred');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -152,7 +156,9 @@ export default function AdminRoomsManager() {
               <input type="file" accept="image/*" onChange={e => setNewImage(e.target.files[0])} />
             </div>
           </div>
-          <button type="submit" class="btn">Save Room</button>
+          <button type="submit" class="btn" disabled={isSaving()}>
+            {isSaving() ? 'Saving Room...' : 'Save Room'}
+          </button>
         </form>
       )}
 

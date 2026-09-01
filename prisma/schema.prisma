@@ -62,6 +62,8 @@ model Booking {
   checkOutDate DateTime
   status       String   @default("Pending") // "Pending", "Paid", "Cancelled"
   
+  guestName    String?  // Optional name for walk-in guests
+  
   roomId       String
   room         Room     @relation(fields: [roomId], references: [id])
   userId       String

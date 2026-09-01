@@ -11,8 +11,9 @@ export const GET: APIRoute = async () => {
     // Map to a simpler structure for the admin dashboard
     const formattedBookings = bookings.map(b => ({
       id: b.id,
-      guestName: b.user?.name || 'Unknown Guest',
+      guestName: b.guestName || b.user?.name || 'Unknown Guest',
       room: b.room?.name || 'Unknown Room',
+      roomId: b.roomId,
       checkIn: b.checkInDate.toISOString().split('T')[0],
       checkOut: b.checkOutDate.toISOString().split('T')[0],
       status: b.status,
@@ -80,6 +81,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         checkOutDate: checkOut,
         status: data.status || 'Pending',
         roomId: data.roomId,
+        guestName: data.guestName,
         userId: user.id, // Use authenticated user
       }
     });

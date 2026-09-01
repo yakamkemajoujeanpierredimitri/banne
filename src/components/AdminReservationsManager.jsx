@@ -2,6 +2,7 @@ import { createSignal, onMount } from 'solid-js';
 
 export default function AdminReservationsManager() {
   const [reservations, setReservations] = createSignal([]);
+  const [rooms, setRooms] = createSignal([]);
 
   onMount(async () => {
     try {
@@ -9,6 +10,16 @@ export default function AdminReservationsManager() {
       if (res.ok) {
         const data = await res.json();
         setReservations(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
+    try {
+      const resRooms = await fetch('/api/rooms');
+      if (resRooms.ok) {
+        const data = await resRooms.json();
+        setRooms(data.filter(r => r.isAvailable));
       }
     } catch (err) {
       console.error(err);
@@ -177,10 +188,16 @@ export default function AdminReservationsManager() {
               </div>
               <div class="form-group">
                 <label>Room</label>
-                <select value={room()} onChange={(e) => setRoom(e.target.value)}>
-                  <option value="Standard Room">Standard Room</option>
-                  <option value="Deluxe Suite">Deluxe Suite</option>
-                  <option value="Family Room">Family Room</option>
+                <select required value={roomId()} onChange={(e) => {
+                  const selectedId = e.target.value;
+                  setRoomId(selectedId);
+                  const selectedRoom = rooms().find(r => r.id === selectedId);
+                  if (selectedRoom) setRoom(selectedRoom.name);
+                }}>
+                  <option value="" disabled>Select a room</option>
+                  {rooms().map(r => (
+                    <option value={r.id}>{r.name}</option>
+                  ))}
                 </select>
               </div>
               <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
