@@ -17,7 +17,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Route protection
   const path = context.url.pathname;
   const isProtectedRoute = path.startsWith('/dashboard');
-  const isAdminRoute = path.startsWith('/admin');
+  const isAdminRoute = path.startsWith('/admin') && !path.startsWith('/admin/verify');
 
   if ((isProtectedRoute || isAdminRoute) && !context.locals.user) {
     return context.redirect('/login');

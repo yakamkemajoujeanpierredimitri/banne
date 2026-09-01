@@ -14,6 +14,8 @@ model User {
   email     String    @unique
   password  String
   role      String    @default("GUEST") // "ADMIN", "GUEST"
+  otp             String?
+  otpExpiresAt    DateTime?
   bookings  Booking[]
   sessions  Session[]
   createdAt DateTime  @default(now())

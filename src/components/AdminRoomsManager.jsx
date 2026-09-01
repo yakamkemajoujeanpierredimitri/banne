@@ -168,11 +168,17 @@ export default function AdminRoomsManager() {
       </div>
 
       <div class="rooms-grid">
-        {filteredRooms().map(room => (
-          <div class={`admin-room-card ${!room.isAvailable ? 'unavailable' : ''}`}>
+        {filteredRooms().map(room => {
+          const isOccupied = room.bookings && room.bookings.length > 0;
+          const currentOccupant = isOccupied ? room.bookings[0].user : null;
+          const checkOutDate = isOccupied ? new Date(room.bookings[0].checkOutDate).toLocaleDateString() : null;
+
+          return (
+          <div class={`admin-room-card ${!room.isAvailable ? 'unavailable' : ''} ${isOccupied ? 'occupied' : ''}`}>
             <div class="thumbnail-wrapper">
                 <img src={room.image} alt={room.name} class="room-thumbnail" />
                 {!room.isAvailable && <span class="badge-unavailable">Unavailable</span>}
+                {isOccupied && room.isAvailable && <span class="badge-occupied">Occupied</span>}
             </div>
             <div class="room-details">
               <h4>{room.name}</h4>
@@ -181,6 +187,12 @@ export default function AdminRoomsManager() {
               <p class="amenities" style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">
                 <strong>Amenities:</strong> {room.amenities && room.amenities.length > 0 ? room.amenities.join(', ') : 'None'}
               </p>
+              {isOccupied && (
+                <div class="occupant-info" style="margin-top: 0.75rem; padding: 0.5rem; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 4px; font-size: 0.9rem; color: #0369a1;">
+                  <strong>Current Occupant:</strong> {currentOccupant?.name} ({currentOccupant?.email})<br/>
+                  <strong>Checkout:</strong> {checkOutDate}
+                </div>
+              )}
             </div>
             <div class="room-actions">
                 <button 
@@ -193,7 +205,7 @@ export default function AdminRoomsManager() {
                 <button class="action-btn delete" onClick={() => handleDelete(room.id)}>Delete</button>
             </div>
           </div>
-        ))}
+        )})}
         {filteredRooms().length === 0 && <p class="no-results">No rooms match your filters.</p>}
       </div>
       
@@ -203,6 +215,9 @@ export default function AdminRoomsManager() {
             background: #f8fafc;
             border-color: #cbd5e1;
         }
+        .admin-room-card.occupied {
+            border-color: #bae6fd;
+        }
         .thumbnail-wrapper {
             position: relative;
         }
@@ -211,6 +226,17 @@ export default function AdminRoomsManager() {
             top: 0.5rem;
             left: 0.5rem;
             background: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+        .badge-occupied {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            background: #0ea5e9;
             color: white;
             font-size: 0.75rem;
             font-weight: 600;

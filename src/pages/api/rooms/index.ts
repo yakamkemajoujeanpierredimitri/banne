@@ -1,9 +1,34 @@
 import type { APIRoute } from 'astro';
 import { prisma } from '../../../lib/prisma';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ locals }) => {
   try {
-    const rooms = await prisma.room.findMany();
+    const user = locals.user;
+    const isAdmin = user && user.role === 'ADMIN';
+    const now = new Date();
+
+    let rooms;
+    if (isAdmin) {
+      rooms = await prisma.room.findMany({
+        include: {
+          bookings: {
+            where: {
+              checkInDate: { lte: now },
+              checkOutDate: { gte: now },
+              status: { not: 'Cancelled' }
+            },
+            include: {
+              user: {
+                select: { name: true, email: true }
+              }
+            }
+          }
+        }
+      });
+    } else {
+      rooms = await prisma.room.findMany();
+    }
+
     return new Response(JSON.stringify(rooms), {
       status: 200,
       headers: {

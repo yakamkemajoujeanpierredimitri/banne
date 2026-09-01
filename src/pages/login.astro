@@ -17,14 +17,40 @@ if (Astro.request.method === 'POST') {
     const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
     
     if (user && user.password === passwordHash) {
-      const session = await createSession(user.id);
-      Astro.cookies.set('auth_session', session.id, {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        expires: session.expiresAt
-      });
-      return Astro.redirect('/dashboard');
+      if (user.role === 'ADMIN') {
+        const resend = new (await import('resend')).Resend(process.env.RESEND_API_KEY);
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            otp: otpCode,
+            otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+          }
+        });
+
+        try {
+          await resend.emails.send({
+            from: 'onboarding@resend.dev', // Use a default resend address
+            to: user.email,
+            subject: 'Admin Login Verification Code',
+            html: `<p>Your verification code is: <strong>${otpCode}</strong></p><p>This code will expire in 10 minutes.</p>`
+          });
+        } catch (e) {
+          console.error("Failed to send OTP:", e);
+        }
+
+        return Astro.redirect(`/admin/verify?email=${encodeURIComponent(user.email)}`);
+      } else {
+        const session = await createSession(user.id);
+        Astro.cookies.set('auth_session', session.id, {
+          path: '/',
+          httpOnly: true,
+          sameSite: 'lax',
+          expires: session.expiresAt
+        });
+        return Astro.redirect('/dashboard');
+      }
     } else {
       error = 'Invalid email or password';
     }
