@@ -2,12 +2,15 @@ import { createSignal, onMount } from 'solid-js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import '../styles/global.css';
+import { useTranslations } from '../i18n/utils';
 
 export default function BookingWidget(props) {
   const [checkIn, setCheckIn] = createSignal('');
   const [checkOut, setCheckOut] = createSignal('');
   const [guests, setGuests] = createSignal(1);
   const [status, setStatus] = createSignal('idle');
+  
+  const t = useTranslations(props.lang || 'it');
 
   let checkInRef;
   let checkOutRef;
@@ -40,6 +43,8 @@ export default function BookingWidget(props) {
     });
   });
 
+  const [paymentOption, setPaymentOption] = createSignal('now');
+
   const handleBooking = async (e) => {
     e.preventDefault();
     if (!props.userId) {
@@ -59,7 +64,8 @@ export default function BookingWidget(props) {
           roomId: props.roomId,
           checkIn: checkIn(),
           checkOut: checkOut(),
-          userId: props.userId 
+          userId: props.userId,
+          paymentOption: paymentOption()
         })
       });
       
@@ -72,7 +78,13 @@ export default function BookingWidget(props) {
       
       const bookingData = await response.json();
 
-      // Create checkout session
+      if (paymentOption() === 'later') {
+        setStatus('success');
+        window.location.href = `/booking/success`;
+        return;
+      }
+
+      // Create checkout session for 'now'
       const checkoutResponse = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -99,53 +111,79 @@ export default function BookingWidget(props) {
 
   return (
     <div class="booking-widget">
-      <h3>Book Your Stay</h3>
-      <p class="price-info">Starting at ${props.price || 150} / night</p>
+      <h3>{t('booking.title')}</h3>
+      <p class="price-info">{t('booking.startingAt')}{props.price || 150}{t('booking.perNight')}</p>
       
       {status() === 'success' ? (
         <div class="success-message">
-          <p>Booking confirmed! We look forward to your stay.</p>
+          <p>{t('booking.success')}</p>
         </div>
       ) : (
         <form onSubmit={handleBooking}>
           <div class="form-group">
-            <label for="check-in">Check-in Date</label>
+            <label for="check-in">{t('booking.checkIn')}</label>
             <input 
               type="text" 
               id="check-in" 
               ref={checkInRef}
-              placeholder="Select Date..."
+              placeholder={t('booking.selectDate')}
               required 
             />
           </div>
           
           <div class="form-group">
-            <label for="check-out">Check-out Date</label>
+            <label for="check-out">{t('booking.checkOut')}</label>
             <input 
               type="text" 
               id="check-out" 
               ref={checkOutRef}
-              placeholder="Select Date..."
+              placeholder={t('booking.selectDate')}
               required 
             />
           </div>
 
           <div class="form-group">
-            <label for="guests">Guests</label>
+            <label for="guests">{t('booking.guests')}</label>
             <select 
               id="guests" 
               value={guests()} 
               onChange={(e) => setGuests(e.target.value)}
             >
-              <option value="1">1 Guest</option>
-              <option value="2">2 Guests</option>
-              <option value="3">3 Guests</option>
-              <option value="4">4 Guests</option>
+              <option value="1">{t('booking.guest1')}</option>
+              <option value="2">{t('booking.guest2')}</option>
+              <option value="3">{t('booking.guest3')}</option>
+              <option value="4">{t('booking.guest4')}</option>
             </select>
           </div>
 
+          <div class="form-group payment-options">
+            <label style="margin-bottom: 0.5rem; display: block;">{t('booking.paymentMethod') || 'Payment Method'}</label>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <label style="font-weight: normal; display: flex; align-items: center; gap: 0.5rem;">
+                <input 
+                  type="radio" 
+                  name="payment" 
+                  value="now" 
+                  checked={paymentOption() === 'now'}
+                  onChange={() => setPaymentOption('now')}
+                />
+                {t('booking.payNow') || 'Pay Now (Stripe)'}
+              </label>
+              <label style="font-weight: normal; display: flex; align-items: center; gap: 0.5rem;">
+                <input 
+                  type="radio" 
+                  name="payment" 
+                  value="later" 
+                  checked={paymentOption() === 'later'}
+                  onChange={() => setPaymentOption('later')}
+                />
+                {t('booking.payLater') || 'Pay at Check-in'}
+              </label>
+            </div>
+          </div>
+
           <button type="submit" class="btn book-btn" disabled={status() === 'loading'}>
-            {status() === 'loading' ? 'Processing...' : 'Confirm Booking'}
+            {status() === 'loading' ? t('booking.processing') : t('booking.confirm')}
           </button>
         </form>
       )}

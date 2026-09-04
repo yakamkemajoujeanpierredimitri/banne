@@ -10,7 +10,7 @@ interface Props {
 }
 
 const { title, description = "Experience unparalleled luxury and comfort at Albergobanne Hotel." } = Astro.props;
-const currentLocale = Astro.currentLocale || getLangFromUrl(Astro.url);
+const currentLocale = Astro.currentLocale || Astro.locals.lang || "it";
 const t = useTranslations(currentLocale as any);
 const translatePath = useTranslatedPath(currentLocale as any);
 ---

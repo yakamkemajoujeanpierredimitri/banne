@@ -34,28 +34,28 @@ if (Astro.request.method === 'POST') {
       });
       return Astro.redirect('/admin/dashboard');
     } else {
-      error = 'Invalid or expired verification code';
+      error = 'Codice di verifica non valido o scaduto';
     }
   } else {
-    error = 'Please enter the verification code';
+    error = 'Inserisci il codice di verifica';
   }
 }
 ---
 
-<Layout title="Admin Verification - Albergobanne">
+<Layout title="Verifica Amministratore - Albergobanne">
   <div class="auth-container container">
     <div class="auth-card">
-      <h1>Admin Verification</h1>
-      <p>We've sent a 6-digit verification code to <strong>{email}</strong>.</p>
+      <h1>Verifica Amministratore</h1>
+      <p>Abbiamo inviato un codice di verifica a 6 cifre a <strong>{email}</strong>.</p>
       
       {error && <div class="error-alert">{error}</div>}
       
       <form method="POST" class="auth-form">
         <div class="form-group">
-          <label for="otp">Verification Code</label>
+          <label for="otp">Codice di Verifica</label>
           <input type="text" id="otp" name="otp" required placeholder="123456" autocomplete="one-time-code" />
         </div>
-        <button type="submit" class="btn">Verify & Log In</button>
+        <button type="submit" class="btn">Verifica e Accedi</button>
       </form>
     </div>
   </div>

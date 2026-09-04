@@ -88,10 +88,10 @@ export default function AdminReservationsManager() {
           };
           setReservations([bkgFormatted, ...reservations()]);
         } else {
-          alert('Failed to save booking');
+          alert('Errore nel salvataggio della prenotazione');
         }
       } catch (err) {
-        alert('An error occurred');
+        alert('Si è verificato un errore');
       }
     } else {
       // Edit existing
@@ -112,28 +112,75 @@ export default function AdminReservationsManager() {
               : r
           ));
         } else {
-          alert('Failed to update booking');
+          alert('Errore nell\'aggiornamento della prenotazione');
         }
       } catch (err) {
-        alert('An error occurred');
+        alert('Si è verificato un errore');
       }
     }
     closeModal();
   };
 
-  const markPaid = (id) => {
-    setReservations(reservations().map(res => 
-      res.id === id ? { ...res, status: 'Paid' } : res
-    ));
+  const markPaid = async (id) => {
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Paid' })
+      });
+      if (res.ok) {
+        setReservations(reservations().map(r => 
+          r.id === id ? { ...r, status: 'Paid' } : r
+        ));
+      } else {
+        alert('Errore durante l\'aggiornamento dello stato.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Si è verificato un errore.');
+    }
+  };
+
+  const handleExportCSV = () => {
+    const data = reservations();
+    if (data.length === 0) {
+      alert("Nessuna prenotazione da esportare.");
+      return;
+    }
+
+    const headers = ['ID Prenotazione', 'Nome Ospite', 'Camera', 'Check-in', 'Check-out', 'Stato', 'Totale'];
+    const csvRows = [headers.join(',')];
+
+    for (const res of data) {
+      const row = [
+        res.id,
+        `"${(res.guestName || '').replace(/"/g, '""')}"`,
+        `"${(res.room || '').replace(/"/g, '""')}"`,
+        res.checkIn,
+        res.checkOut,
+        res.status,
+        res.total
+      ];
+      csvRows.push(row.join(','));
+    }
+
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csvRows.join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `prenotazioni_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
     <div class="admin-reservations">
       <div class="section-header">
-          <h2>Recent Reservations</h2>
+          <h2>Prenotazioni Recenti</h2>
           <div class="header-actions" style="display: flex; gap: 1rem;">
-              <button class="btn btn-outline" onClick={() => alert("CSV Exported successfully!")}>Export CSV</button>
-              <button class="btn" style="background: var(--primary);" onClick={openAddModal}>+ Walk-in Booking</button>
+              <button class="btn btn-outline" onClick={handleExportCSV}>Esporta CSV</button>
+              <button class="btn" style="background: var(--primary);" onClick={openAddModal}>+ Prenotazione Diretta</button>
           </div>
       </div>
       
@@ -141,14 +188,14 @@ export default function AdminReservationsManager() {
           <table class="admin-table">
               <thead>
                   <tr>
-                      <th>Booking ID</th>
-                      <th>Guest Name</th>
-                      <th>Room</th>
+                      <th>ID Prenotazione</th>
+                      <th>Nome Ospite</th>
+                      <th>Camera</th>
                       <th>Check-in</th>
                       <th>Check-out</th>
-                      <th>Status</th>
-                      <th>Total</th>
-                      <th>Actions</th>
+                      <th>Stato</th>
+                      <th>Totale</th>
+                      <th>Azioni</th>
                   </tr>
               </thead>
               <tbody>
@@ -161,15 +208,15 @@ export default function AdminReservationsManager() {
                           <td>{res.checkOut}</td>
                           <td>
                               <span class={`status-badge ${res.status.toLowerCase()}`}>
-                                  {res.status}
+                                  {res.status === 'Pending' ? 'In sospeso' : res.status === 'Paid' ? 'Pagato' : res.status === 'Cancelled' ? 'Cancellato' : res.status === 'Pay_at_checkin' ? 'All\'arrivo' : res.status}
                               </span>
                           </td>
                           <td>${res.total}</td>
                           <td style="display: flex; gap: 0.5rem;">
-                              {res.status === 'Pending' && (
-                                  <button class="action-btn" style="color: #059669; font-weight: bold;" onClick={() => markPaid(res.id)}>Mark Paid</button>
+                              {(res.status === 'Pending' || res.status === 'Pay_at_checkin') && (
+                                  <button class="action-btn" style="color: #059669; font-weight: bold;" onClick={() => markPaid(res.id)}>Segna Pagato</button>
                               )}
-                              <button class="action-btn" onClick={() => openEditModal(res)}>Edit</button>
+                              <button class="action-btn" onClick={() => openEditModal(res)}>Modifica</button>
                           </td>
                       </tr>
                   ))}
@@ -180,21 +227,21 @@ export default function AdminReservationsManager() {
       {showModal() && (
         <div class="modal-overlay">
           <div class="modal-content">
-            <h3>{modalMode() === 'add' ? 'New Walk-in Booking' : 'Edit Reservation'}</h3>
+            <h3>{modalMode() === 'add' ? 'Nuova Prenotazione Diretta' : 'Modifica Prenotazione'}</h3>
             <form onSubmit={handleSave}>
               <div class="form-group">
-                <label>Guest Name</label>
+                <label>Nome Ospite</label>
                 <input type="text" required value={guestName()} onInput={(e) => setGuestName(e.target.value)} />
               </div>
               <div class="form-group">
-                <label>Room</label>
+                <label>Camera</label>
                 <select required value={roomId()} onChange={(e) => {
                   const selectedId = e.target.value;
                   setRoomId(selectedId);
                   const selectedRoom = rooms().find(r => r.id === selectedId);
                   if (selectedRoom) setRoom(selectedRoom.name);
                 }}>
-                  <option value="" disabled>Select a room</option>
+                  <option value="" disabled>Seleziona una camera</option>
                   {rooms().map(r => (
                     <option value={r.id}>{r.name}</option>
                   ))}
@@ -211,16 +258,16 @@ export default function AdminReservationsManager() {
                 </div>
               </div>
               <div class="form-group">
-                <label>Payment Status</label>
+                <label>Stato del Pagamento</label>
                 <select value={status()} onChange={(e) => setStatus(e.target.value)}>
-                  <option value="Pending">Pending</option>
-                  <option value="Paid">Paid</option>
-                  <option value="Cancelled">Cancelled</option>
+                  <option value="Pending">In sospeso</option>
+                  <option value="Paid">Pagato</option>
+                  <option value="Cancelled">Cancellato</option>
                 </select>
               </div>
               <div class="modal-actions" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
-                <button type="button" class="btn btn-outline" onClick={closeModal}>Cancel</button>
-                <button type="submit" class="btn">Save</button>
+                <button type="button" class="btn btn-outline" onClick={closeModal}>Annulla</button>
+                <button type="submit" class="btn">Salva</button>
               </div>
             </form>
           </div>

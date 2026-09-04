@@ -79,12 +79,22 @@ export const POST: APIRoute = async ({ request, locals }) => {
       data: {
         checkInDate: checkIn,
         checkOutDate: checkOut,
-        status: data.status || 'Pending',
+        status: data.paymentOption === 'later' ? 'Pay_at_checkin' : (data.status || 'Pending'),
         roomId: data.roomId,
         guestName: data.guestName,
         userId: user.id, // Use authenticated user
       }
     });
+    
+    // Trigger confirmation email for pay-at-checkin bookings immediately
+    if (data.paymentOption === 'later') {
+      const { sendBookingConfirmation } = await import('../../../lib/email');
+      try {
+        await sendBookingConfirmation(booking.id);
+      } catch (err) {
+        console.error('Failed to send pay_at_checkin confirmation:', err);
+      }
+    }
     
     return new Response(JSON.stringify(booking), {
       status: 201,

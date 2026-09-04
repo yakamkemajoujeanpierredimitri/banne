@@ -54,7 +54,7 @@ export default function AdminRoomsManager() {
           const uploadData = await uploadRes.json();
           imageUrl = uploadData.url;
         } else {
-          alert('Failed to upload image. Using default.');
+          alert('Impossibile caricare l\'immagine. Uso quella predefinita.');
         }
       }
 
@@ -80,10 +80,10 @@ export default function AdminRoomsManager() {
         // Reset form
         setNewName(''); setNewDesc(''); setNewPrice(100); setNewImage(null); setNewAmenities('');
       } else {
-        alert('Failed to add room');
+        alert('Impossibile aggiungere la camera');
       }
     } catch (err) {
-      alert('An error occurred');
+      alert('Si è verificato un errore');
     } finally {
       setIsSaving(false);
     }
@@ -95,10 +95,10 @@ export default function AdminRoomsManager() {
       if (res.ok) {
         setRooms(rooms().filter(r => r.id !== id));
       } else {
-        alert('Failed to delete room');
+        alert('Impossibile eliminare la camera');
       }
     } catch (err) {
-      alert('An error occurred');
+      alert('Si è verificato un errore');
     }
   };
 
@@ -115,60 +115,60 @@ export default function AdminRoomsManager() {
       if (res.ok) {
         setRooms(rooms().map(r => r.id === id ? { ...r, isAvailable: !r.isAvailable } : r));
       } else {
-        alert('Failed to update availability');
+        alert('Impossibile aggiornare la disponibilità');
       }
     } catch (err) {
-      alert('An error occurred');
+      alert('Si è verificato un errore');
     }
   };
 
   return (
     <div class="admin-rooms-manager">
       <div class="rooms-header">
-        <h2>Hotel Rooms Management</h2>
+        <h2>Gestione Camere Hotel</h2>
         <button class="btn" onClick={() => setShowAddForm(!showAddForm())}>
-          {showAddForm() ? 'Cancel' : '+ Add New Room'}
+          {showAddForm() ? 'Annulla' : '+ Aggiungi Nuova Camera'}
         </button>
       </div>
 
       {showAddForm() && (
         <form class="add-room-form" onSubmit={handleAddRoom}>
-          <h3>Add a New Room</h3>
+          <h3>Aggiungi una Nuova Camera</h3>
           <div class="form-grid">
             <div class="form-group">
-              <label>Room Name</label>
-              <input type="text" required value={newName()} onInput={e => setNewName(e.target.value)} placeholder="e.g. Presidential Suite" />
+              <label>Nome Camera</label>
+              <input type="text" required value={newName()} onInput={e => setNewName(e.target.value)} placeholder="es. Suite Presidenziale" />
             </div>
             <div class="form-group">
-              <label>Price per Night ($)</label>
+              <label>Prezzo per Notte ($)</label>
               <input type="number" required min="0" value={newPrice()} onInput={e => setNewPrice(e.target.value)} />
             </div>
             <div class="form-group full-width">
-              <label>Description</label>
+              <label>Descrizione</label>
               <textarea required value={newDesc()} onInput={e => setNewDesc(e.target.value)} rows="3"></textarea>
             </div>
             <div class="form-group full-width">
-              <label>Amenities (comma separated)</label>
+              <label>Servizi (separati da virgola)</label>
               <input type="text" value={newAmenities()} onInput={e => setNewAmenities(e.target.value)} placeholder="Wi-Fi, TV, Mini-bar" />
             </div>
             <div class="form-group full-width">
-              <label>Room Picture</label>
+              <label>Immagine Camera</label>
               <input type="file" accept="image/*" onChange={e => setNewImage(e.target.files[0])} />
             </div>
           </div>
           <button type="submit" class="btn" disabled={isSaving()}>
-            {isSaving() ? 'Saving Room...' : 'Save Room'}
+            {isSaving() ? 'Salvataggio...' : 'Salva Camera'}
           </button>
         </form>
       )}
 
       <div class="filters-bar">
         <div class="filter-group">
-          <label>Search Rooms</label>
-          <input type="text" placeholder="Search by name..." value={search()} onInput={e => setSearch(e.target.value)} />
+          <label>Cerca Camere</label>
+          <input type="text" placeholder="Cerca per nome..." value={search()} onInput={e => setSearch(e.target.value)} />
         </div>
         <div class="filter-group">
-          <label>Max Price: ${maxPrice()}</label>
+          <label>Prezzo Max: ${maxPrice()}</label>
           <input type="range" min="50" max="1000" step="50" value={maxPrice()} onInput={e => setMaxPrice(e.target.value)} />
         </div>
       </div>
@@ -183,20 +183,20 @@ export default function AdminRoomsManager() {
           <div class={`admin-room-card ${!room.isAvailable ? 'unavailable' : ''} ${isOccupied ? 'occupied' : ''}`}>
             <div class="thumbnail-wrapper">
                 <img src={room.image} alt={room.name} class="room-thumbnail" />
-                {!room.isAvailable && <span class="badge-unavailable">Unavailable</span>}
-                {isOccupied && room.isAvailable && <span class="badge-occupied">Occupied</span>}
+                {!room.isAvailable && <span class="badge-unavailable">Non disponibile</span>}
+                {isOccupied && room.isAvailable && <span class="badge-occupied">Occupata</span>}
             </div>
             <div class="room-details">
               <h4>{room.name}</h4>
-              <p class="price">${room.price} / night</p>
+              <p class="price">${room.price} / notte</p>
               <p class="desc">{room.description}</p>
               <p class="amenities" style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">
-                <strong>Amenities:</strong> {room.amenities && room.amenities.length > 0 ? room.amenities.join(', ') : 'None'}
+                <strong>Servizi:</strong> {room.amenities && room.amenities.length > 0 ? room.amenities.join(', ') : 'Nessuno'}
               </p>
               {isOccupied && (
                 <div class="occupant-info" style="margin-top: 0.75rem; padding: 0.5rem; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 4px; font-size: 0.9rem; color: #0369a1;">
-                  <strong>Current Occupant:</strong> {currentOccupant?.name} ({currentOccupant?.email})<br/>
-                  <strong>Checkout:</strong> {checkOutDate}
+                  <strong>Attuale Occupante:</strong> {currentOccupant?.name} ({currentOccupant?.email})<br/>
+                  <strong>Check-out:</strong> {checkOutDate}
                 </div>
               )}
             </div>
@@ -205,14 +205,14 @@ export default function AdminRoomsManager() {
                   class={`action-btn ${room.isAvailable ? 'disable' : 'enable'}`} 
                   onClick={() => toggleAvailability(room.id)}
                 >
-                  {room.isAvailable ? 'Mark Unavailable' : 'Mark Available'}
+                  {room.isAvailable ? 'Segna Non Disponibile' : 'Segna Disponibile'}
                 </button>
-                <button class="action-btn">Edit</button>
-                <button class="action-btn delete" onClick={() => handleDelete(room.id)}>Delete</button>
+                <button class="action-btn">Modifica</button>
+                <button class="action-btn delete" onClick={() => handleDelete(room.id)}>Elimina</button>
             </div>
           </div>
         )})}
-        {filteredRooms().length === 0 && <p class="no-results">No rooms match your filters.</p>}
+        {filteredRooms().length === 0 && <p class="no-results">Nessuna camera corrisponde ai tuoi filtri.</p>}
       </div>
       
       <style>{`

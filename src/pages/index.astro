@@ -6,7 +6,7 @@ import heroImg from '../assets/pic2.jpg';
 import { getLangFromUrl, useTranslations, useTranslatedPath } from '../i18n/utils';
 import { prisma } from '../lib/prisma';
 
-const lang = getLangFromUrl(Astro.url);
+const lang = Astro.locals.lang || 'it';
 const t = useTranslations(lang);
 const translatePath = useTranslatedPath(lang);
 
@@ -75,7 +75,7 @@ if (reviews.length === 0) {
 	</section>
 	
 	<section class="container testimonials" style="margin-top: 4rem; padding-top: 4rem; border-top: 1px solid var(--border);">
-		<h2 style="text-align: center; margin-bottom: 2rem;">Guest Reviews</h2>
+		<h2 style="text-align: center; margin-bottom: 2rem;">{t('reviews.title')}</h2>
 		<div class="feature-grid">
 			{reviews.map(review => (
 				<div class="feature-card" style="text-align: left;">
@@ -84,7 +84,7 @@ if (reviews.length === 0) {
 					</div>
 					<p style="font-style: italic; margin-bottom: 1rem;">"{review.comment}"</p>
 					<p style="font-weight: bold; margin: 0;">- {review.guestName}</p>
-					<p style="font-size: 0.8rem; color: #666; margin: 0;">Stayed in: {review.room.name}</p>
+					<p style="font-size: 0.8rem; color: #666; margin: 0;">{t('reviews.stayedIn')} {review.room.name}</p>
 				</div>
 			))}
 		</div>

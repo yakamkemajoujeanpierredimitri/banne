@@ -3,6 +3,10 @@ import Layout from '../layouts/Layout.astro';
 import { prisma } from '../lib/prisma';
 import { createSession } from '../lib/auth';
 import crypto from 'crypto'; // For simple hashing, though bcrypt is better for prod
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+const lang = Astro.locals.lang || "it";
+const t = useTranslations(lang);
 
 let error = '';
 
@@ -12,47 +16,58 @@ if (Astro.request.method === 'POST') {
   const password = data.get('password')?.toString();
 
   if (email && password) {
-    const user = await prisma.user.findUnique({ where: { email } });
-    // In a real app, use bcrypt.compare
-    const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
-    
-    if (user && user.password === passwordHash) {
-      if (user.role === 'ADMIN') {
-        const resend = new (await import('resend')).Resend(process.env.RESEND_API_KEY);
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-        
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            otp: otpCode,
-            otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
-          }
-        });
-
-        try {
-          await resend.emails.send({
-            from: 'onboarding@resend.dev', // Use a default resend address
-            to: user.email,
-            subject: 'Admin Login Verification Code',
-            html: `<p>Your verification code is: <strong>${otpCode}</strong></p><p>This code will expire in 10 minutes.</p>`
-          });
-        } catch (e) {
-          console.error("Failed to send OTP:", e);
-        }
-
-        return Astro.redirect(`/admin/verify?email=${encodeURIComponent(user.email)}`);
-      } else {
-        const session = await createSession(user.id);
-        Astro.cookies.set('auth_session', session.id, {
-          path: '/',
-          httpOnly: true,
-          sameSite: 'lax',
-          expires: session.expiresAt
-        });
-        return Astro.redirect('/dashboard');
-      }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      error = lang === 'it' ? 'Indirizzo email non valido' : 
+              lang === 'fr' ? 'Adresse email invalide' :
+              lang === 'nl' ? 'Ongeldig e-mailadres' :
+              'Invalid email address';
     } else {
-      error = 'Invalid email or password';
+      const user = await prisma.user.findUnique({ where: { email } });
+      // In a real app, use bcrypt.compare
+      const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+      
+      if (user && user.password === passwordHash) {
+        if (user.role === 'ADMIN') {
+          const resend = new (await import('resend')).Resend(process.env.RESEND_API_KEY);
+          const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+          
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              otp: otpCode,
+              otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+            }
+          });
+
+          try {
+            await resend.emails.send({
+              from: 'onboarding@resend.dev', // Use a default resend address
+              to: user.email,
+              subject: 'Admin Login Verification Code',
+              html: `<p>Your verification code is: <strong>${otpCode}</strong></p><p>This code will expire in 10 minutes.</p>`
+            });
+          } catch (e) {
+            console.error("Failed to send OTP:", e);
+          }
+
+          return Astro.redirect(`/admin/verify?email=${encodeURIComponent(user.email)}`);
+        } else {
+          const session = await createSession(user.id);
+          Astro.cookies.set('auth_session', session.id, {
+            path: '/',
+            httpOnly: true,
+            sameSite: 'lax',
+            expires: session.expiresAt
+          });
+          return Astro.redirect('/dashboard');
+        }
+      } else {
+        error = lang === 'it' ? 'Email o password non validi' :
+                lang === 'fr' ? 'Email ou mot de passe invalide' :
+                lang === 'nl' ? 'Ongeldig e-mailadres of wachtwoord' :
+                'Invalid email or password';
+      }
     }
   } else {
     error = 'Please fill out all fields';
@@ -60,27 +75,27 @@ if (Astro.request.method === 'POST') {
 }
 ---
 
-<Layout title="Login - Albergobanne">
+<Layout title={`${t('login.title')} - Albergobanne`}>
   <div class="auth-container container">
     <div class="auth-card">
-      <h1>Welcome Back</h1>
-      <p>Log in to manage your bookings and account.</p>
+      <h1>{t('login.title')}</h1>
+      <p>{t('login.subtitle')}</p>
       
       {error && <div class="error-alert">{error}</div>}
       
       <form method="POST" class="auth-form">
         <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" name="email" required />
+          <label for="email">{t('login.email')}</label>
+          <input type="email" id="email" name="email" required pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" title="Valid email required" />
         </div>
         <div class="form-group">
-          <label for="password">Password</label>
+          <label for="password">{t('login.password')}</label>
           <input type="password" id="password" name="password" required />
         </div>
-        <button type="submit" class="btn">Log In</button>
+        <button type="submit" class="btn">{t('login.submit')}</button>
       </form>
       <div class="auth-links">
-        <p>Don't have an account? <a href="/register">Register here</a></p>
+        <p>{t('login.noAccount')} <a href="/register">{t('login.registerLink')}</a></p>
       </div>
     </div>
   </div>

@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { prisma } from './prisma';
 
-const resendApiKey = import.meta.env.RESEND_API_KEY || process.env.RESEND_API_KEY || '';
+const resendApiKey = import.meta.env.RESEND_API_KEY || process.env.RESEND_API_KEY ;
 const resend = new Resend(resendApiKey);
 
 export async function sendBookingConfirmation(bookingId: string) {
@@ -27,7 +27,7 @@ export async function sendBookingConfirmation(bookingId: string) {
   const roomName = booking.room.name;
   
   // You would typically set this in .env as well
-  const hotelAdminEmail = import.meta.env.HOTEL_ADMIN_EMAIL || process.env.HOTEL_ADMIN_EMAIL || 'admin@albergobanne.com';
+  const hotelAdminEmail = import.meta.env.HOTEL_ADMIN_EMAIL || process.env.HOTEL_ADMIN_EMAIL || 'yakanidamai@gmail.com';
   // Note: For Resend free tier, 'from' must be a verified domain.
   // We'll use a placeholder domain here, assuming you will configure it in Resend.
   const fromEmail = 'Albergobanne Hotel <onboarding@resend.dev>'; // 'onboarding@resend.dev' works for testing on free tier
@@ -36,6 +36,10 @@ export async function sendBookingConfirmation(bookingId: string) {
       console.warn('No guest email found, skipping guest confirmation email');
   } else {
       // Send Email to Guest
+      const guestMessage = booking.status === 'Paid' 
+        ? 'Your booking has been confirmed and paid successfully.'
+        : 'Your booking has been confirmed. Payment will be collected upon check-in.';
+
       try {
         await resend.emails.send({
           from: fromEmail,
@@ -45,7 +49,7 @@ export async function sendBookingConfirmation(bookingId: string) {
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
                 <h1 style="color: #c4a47c;">Booking Confirmation</h1>
                 <p>Dear ${guestName},</p>
-                <p>Thank you for choosing Albergobanne Hotel. Your booking has been confirmed and paid successfully.</p>
+                <p>Thank you for choosing Albergobanne Hotel. ${guestMessage}</p>
                 
                 <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin: 20px 0;">
                     <h2 style="margin-top: 0; font-size: 1.2rem;">Booking Details</h2>
@@ -54,6 +58,7 @@ export async function sendBookingConfirmation(bookingId: string) {
                         <li style="margin-bottom: 10px;"><strong>Room:</strong> ${roomName}</li>
                         <li style="margin-bottom: 10px;"><strong>Check-in:</strong> ${checkIn}</li>
                         <li style="margin-bottom: 10px;"><strong>Check-out:</strong> ${checkOut}</li>
+                        <li style="margin-bottom: 10px;"><strong>Status:</strong> ${booking.status}</li>
                     </ul>
                 </div>
                 
@@ -68,6 +73,10 @@ export async function sendBookingConfirmation(bookingId: string) {
   }
 
   // Send Email to Admin
+  const adminMessage = booking.status === 'Paid'
+    ? 'A new booking has been paid and confirmed.'
+    : 'A new booking has been created (Pay at Check-in).';
+
   try {
     await resend.emails.send({
       from: fromEmail,
@@ -76,7 +85,7 @@ export async function sendBookingConfirmation(bookingId: string) {
       html: `
         <div style="font-family: sans-serif; color: #333;">
             <h1>New Booking Received</h1>
-            <p>A new booking has been paid and confirmed.</p>
+            <p>${adminMessage}</p>
             <h2>Booking Details</h2>
             <ul>
                 <li><strong>Booking ID:</strong> ${booking.id}</li>
@@ -85,6 +94,7 @@ export async function sendBookingConfirmation(bookingId: string) {
                 <li><strong>Room:</strong> ${roomName}</li>
                 <li><strong>Check-in:</strong> ${checkIn}</li>
                 <li><strong>Check-out:</strong> ${checkOut}</li>
+                <li><strong>Status:</strong> ${booking.status}</li>
             </ul>
         </div>
       `,

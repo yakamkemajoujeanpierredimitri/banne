@@ -3,6 +3,10 @@ import Layout from '../layouts/Layout.astro';
 import { Image } from 'astro:assets';
 import { prisma } from '../lib/prisma';
 import pic4 from '../assets/pic4.jpg'; // We can remove this later when images are from DB
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+const lang = Astro.locals.lang || "it";
+const t = useTranslations(lang);
 
 // Require user
 const user = Astro.locals.user;
@@ -27,11 +31,11 @@ const bookings = rawBookings.map(b => ({
 }));
 ---
 
-<Layout title="My Account - Albergobanne">
+<Layout title={`${t('dash.upcoming')} - Albergobanne`}>
     <div class="container dashboard">
         <header class="dashboard-header">
-            <h1>Welcome back, {user.name}</h1>
-            <p>Manage your luxury stays and account details.</p>
+            <h1>{t('dash.welcome')} {user.name}</h1>
+            <p>{t('dash.subtitle')}</p>
         </header>
 
         <div class="dashboard-grid">
@@ -39,14 +43,14 @@ const bookings = rawBookings.map(b => ({
                 <div class="avatar">JD</div>
                 <h2>{user.name}</h2>
                 <p>{user.email}</p>
-                <p class="member-tag">Gold Member • Since {new Date(user.createdAt).getFullYear()}</p>
+                <p class="member-tag">{t('dash.member')} {new Date(user.createdAt).getFullYear()}</p>
                 <form method="POST" action="/api/auth/logout" style="width: 100%;">
-                    <button type="submit" class="btn logout-btn" style="width: 100%;">Log Out</button>
+                    <button type="submit" class="btn logout-btn" style="width: 100%;">{t('dash.logout')}</button>
                 </form>
             </aside>
 
             <main class="bookings-section">
-                <h2>Your Upcoming Stays</h2>
+                <h2>{t('dash.upcoming')}</h2>
                 {bookings.length > 0 ? (
                     <div class="booking-list">
                         {bookings.map(booking => (
@@ -59,15 +63,15 @@ const bookings = rawBookings.map(b => ({
                                         <h3>{booking.roomName}</h3>
                                         <span class="status-badge">{booking.status}</span>
                                     </div>
-                                    <p><strong>Booking ID:</strong> {booking.id}</p>
-                                    <p><strong>Check-in:</strong> {booking.checkIn}</p>
-                                    <p><strong>Check-out:</strong> {booking.checkOut}</p>
+                                    <p><strong>{t('dash.bookingId')}</strong> {booking.id}</p>
+                                    <p><strong>{t('dash.checkIn')}</strong> {booking.checkIn}</p>
+                                    <p><strong>{t('dash.checkOut')}</strong> {booking.checkOut}</p>
                                     <div class="booking-actions">
-                                        <button class="btn btn-outline">View Details</button>
+                                        <button class="btn btn-outline">{t('dash.viewDetails')}</button>
                                         {booking.status === 'Paid' ? (
-                                            <a href={`/review/${booking.id}`} class="btn btn-outline" style="border-color: #FFD700; color: #b89b00;">Leave Review</a>
+                                            <a href={`/review/${booking.id}`} class="btn btn-outline" style="border-color: #FFD700; color: #b89b00;">{t('dash.leaveReview')}</a>
                                         ) : (
-                                            <button class="btn btn-danger">Cancel Stay</button>
+                                            <button class="btn btn-danger">{t('dash.cancel')}</button>
                                         )}
                                     </div>
                                 </div>
@@ -75,7 +79,7 @@ const bookings = rawBookings.map(b => ({
                         ))}
                     </div>
                 ) : (
-                    <p class="no-bookings">You have no upcoming bookings. <a href="/rooms">Explore our rooms</a> to plan your next stay.</p>
+                    <p class="no-bookings">{t('dash.noBookings')} <a href="/rooms">{t('dash.explore')}</a> {t('dash.planNext')}</p>
                 )}
             </main>
         </div>

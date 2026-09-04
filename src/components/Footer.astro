@@ -1,4 +1,8 @@
 ---
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+const lang = Astro.locals.lang || "it";
+const t = useTranslations(lang);
 const year = new Date().getFullYear();
 ---
 
@@ -6,29 +10,29 @@ const year = new Date().getFullYear();
     <div class="container footer-grid">
         <div class="footer-brand">
             <h3>Albergobanne</h3>
-            <p>Experience unparalleled luxury and comfort in the heart of the city.</p>
+            <p>{t('footer.desc')}</p>
         </div>
         
         <div class="footer-contact">
-            <h4>Contact Us</h4>
+            <h4>{t('footer.contactUs')}</h4>
             <p>123 Luxury Avenue</p>
-            <p>Rome, Italy 00100</p>
+            <p>{t('footer.address')}</p>
             <p><a href="mailto:info@albergobanne.com">info@albergobanne.com</a></p>
             <p><a href="tel:+39061234567">+39 06 123 4567</a></p>
         </div>
         
         <div class="footer-links">
-            <h4>Quick Links</h4>
+            <h4>{t('footer.quickLinks')}</h4>
             <ul>
-                <li><a href="/rooms">Our Rooms</a></li>
-                <li><a href="/dashboard">My Account</a></li>
-                <li><a href="#">Terms & Conditions</a></li>
-                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="/rooms">{t('footer.rooms')}</a></li>
+                <li><a href="/dashboard">{t('footer.account')}</a></li>
+                <li><a href="#">{t('footer.terms')}</a></li>
+                <li><a href="#">{t('footer.privacy')}</a></li>
             </ul>
         </div>
     </div>
     <div class="footer-bottom">
-        <p>&copy; {year} Albergobanne Hotel. All rights reserved.</p>
+        <p>&copy; {year} {t('footer.rights')}</p>
     </div>
 </footer>
 

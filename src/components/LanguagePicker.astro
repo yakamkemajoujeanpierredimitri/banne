@@ -1,13 +1,24 @@
 ---
 // src/components/LanguagePicker.astro
-const currentLocale = Astro.currentLocale || 'it';
+import { getLangFromUrl, useTranslatedPath } from '../i18n/utils';
+
+const currentLocale = Astro.locals.lang || "it";
+const translatePath = useTranslatedPath(currentLocale);
+
+// Calculate the base path without the locale prefix
+let basePath = Astro.url.pathname;
+const parts = basePath.split('/');
+const locales = ['it', 'en', 'fr', 'nl'];
+if (parts.length > 1 && locales.includes(parts[1])) {
+    basePath = basePath.substring(parts[1].length + 1) || '/';
+}
 ---
 
 <div class="lang-picker">
-    <a href="/" class={currentLocale === 'it' ? 'active' : ''}>IT</a>
-    <a href="/en" class={currentLocale === 'en' ? 'active' : ''}>EN</a>
-    <a href="/fr" class={currentLocale === 'fr' ? 'active' : ''}>FR</a>
-    <a href="/nl" class={currentLocale === 'nl' ? 'active' : ''}>NL</a>
+    <a href={translatePath(basePath, 'it')} class={currentLocale === 'it' ? 'active' : ''}>IT</a>
+    <a href={translatePath(basePath, 'en')} class={currentLocale === 'en' ? 'active' : ''}>EN</a>
+    <a href={translatePath(basePath, 'fr')} class={currentLocale === 'fr' ? 'active' : ''}>FR</a>
+    <a href={translatePath(basePath, 'nl')} class={currentLocale === 'nl' ? 'active' : ''}>NL</a>
 </div>
 
 <style>

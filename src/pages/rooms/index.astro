@@ -2,6 +2,11 @@
 import Layout from '../../layouts/Layout.astro';
 import { Image } from 'astro:assets';
 import { prisma } from '../../lib/prisma';
+import { getLangFromUrl, useTranslations, useTranslatedPath } from '../../i18n/utils';
+
+const lang = Astro.locals.lang || "it";
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
 
 // Fetch rooms from database
 const rooms = await prisma.room.findMany({
@@ -9,11 +14,11 @@ const rooms = await prisma.room.findMany({
 });
 ---
 
-<Layout title="Our Rooms - Albergobanne">
+<Layout title={`${t('rooms.title')} - Albergobanne`}>
   <div class="container rooms-page">
     <header class="page-header">
-      <h1>Our Rooms</h1>
-      <p>Find the perfect space for your stay.</p>
+      <h1>{t('rooms.title')}</h1>
+      <p>{t('rooms.subtitle')}</p>
     </header>
 
     <div class="rooms-grid">
@@ -24,9 +29,9 @@ const rooms = await prisma.room.findMany({
           </div>
           <div class="room-content">
             <h2>{room.name}</h2>
-            <p class="price">${room.price} / night</p>
+            <p class="price">${room.price}{t('rooms.perNight')}</p>
             <p class="desc">{room.description}</p>
-            <a href={`/rooms/${room.id}`} class="btn view-btn">View Details</a>
+            <a href={translatePath(`/rooms/${room.id}`)} class="btn view-btn">{t('rooms.viewDetails')}</a>
           </div>
         </div>
       ))}
