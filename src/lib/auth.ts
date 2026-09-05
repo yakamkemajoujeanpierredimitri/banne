@@ -25,7 +25,7 @@ export async function validateSession(sessionId: string) {
   if (!session) return { user: null, session: null };
 
   if (Date.now() >= session.expiresAt.getTime()) {
-    await prisma.session.delete({ where: { id: sessionId } });
+    await prisma.session.deleteMany({ where: { id: sessionId } });
     return { user: null, session: null };
   }
 
@@ -42,5 +42,5 @@ export async function validateSession(sessionId: string) {
 }
 
 export async function invalidateSession(sessionId: string) {
-  await prisma.session.delete({ where: { id: sessionId } });
+  await prisma.session.deleteMany({ where: { id: sessionId } });
 }

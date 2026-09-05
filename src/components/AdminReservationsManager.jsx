@@ -1,4 +1,5 @@
-import { createSignal, onMount } from 'solid-js';
+import { createSignal, onMount, For, Show } from 'solid-js';
+import './AdminReservationsManager.css';
 
 export default function AdminReservationsManager() {
   const [reservations, setReservations] = createSignal([]);
@@ -82,13 +83,13 @@ export default function AdminReservationsManager() {
         });
         if (res.ok) {
           const newBooking = await res.json();
-          // Ideally fetch again or manually format and add to list
           const bkgFormatted = {
             id: newBooking.id, guestName: guestName(), room: room(), checkIn: checkIn(), checkOut: checkOut(), status: status(), total: 0
           };
           setReservations([bkgFormatted, ...reservations()]);
         } else {
-          alert('Errore nel salvataggio della prenotazione');
+          const errData = await res.json().catch(() => ({}));
+          alert(errData.error || 'Errore nel salvataggio della prenotazione');
         }
       } catch (err) {
         alert('Si è verificato un errore');
@@ -112,7 +113,8 @@ export default function AdminReservationsManager() {
               : r
           ));
         } else {
-          alert('Errore nell\'aggiornamento della prenotazione');
+          const errData = await res.json().catch(() => ({}));
+          alert(errData.error || 'Errore nell\'aggiornamento della prenotazione');
         }
       } catch (err) {
         alert('Si è verificato un errore');
@@ -199,7 +201,8 @@ export default function AdminReservationsManager() {
                   </tr>
               </thead>
               <tbody>
-                  {reservations().map((res) => (
+                  <For each={reservations()}>
+                    {(res) => (
                       <tr>
                           <td>{res.id}</td>
                           <td><strong>{res.guestName}</strong></td>
@@ -207,19 +210,20 @@ export default function AdminReservationsManager() {
                           <td>{res.checkIn}</td>
                           <td>{res.checkOut}</td>
                           <td>
-                              <span class={`status-badge ${res.status.toLowerCase()}`}>
+                              <span class={`status-badge ${(res.status || '').toLowerCase()}`}>
                                   {res.status === 'Pending' ? 'In sospeso' : res.status === 'Paid' ? 'Pagato' : res.status === 'Cancelled' ? 'Cancellato' : res.status === 'Pay_at_checkin' ? 'All\'arrivo' : res.status}
                               </span>
                           </td>
                           <td>${res.total}</td>
                           <td style="display: flex; gap: 0.5rem;">
-                              {(res.status === 'Pending' || res.status === 'Pay_at_checkin') && (
+                              <Show when={res.status === 'Pending' || res.status === 'Pay_at_checkin'}>
                                   <button class="action-btn" style="color: #059669; font-weight: bold;" onClick={() => markPaid(res.id)}>Segna Pagato</button>
-                              )}
+                              </Show>
                               <button class="action-btn" onClick={() => openEditModal(res)}>Modifica</button>
                           </td>
                       </tr>
-                  ))}
+                    )}
+                  </For>
               </tbody>
           </table>
       </div>
@@ -242,9 +246,11 @@ export default function AdminReservationsManager() {
                   if (selectedRoom) setRoom(selectedRoom.name);
                 }}>
                   <option value="" disabled>Seleziona una camera</option>
-                  {rooms().map(r => (
-                    <option value={r.id}>{r.name}</option>
-                  ))}
+                  <For each={rooms()}>
+                    {(r) => (
+                      <option value={r.id}>{r.name}</option>
+                    )}
+                  </For>
                 </select>
               </div>
               <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
@@ -274,47 +280,6 @@ export default function AdminReservationsManager() {
         </div>
       )}
 
-      <style>{`
-        /* Modal Styles */
-        .modal-overlay {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 100;
-        }
-        .modal-content {
-          background: white;
-          padding: 2.5rem;
-          border-radius: var(--radius);
-          width: 100%;
-          max-width: 500px;
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-        .modal-content h3 {
-          margin-bottom: 1.5rem;
-          font-size: 1.8rem;
-          color: var(--primary);
-        }
-        .form-group {
-          margin-bottom: 1.2rem;
-        }
-        .form-group label {
-          display: block;
-          font-weight: 600;
-          margin-bottom: 0.5rem;
-          font-size: 0.95rem;
-        }
-        .form-group input, .form-group select {
-          width: 100%;
-          padding: 0.75rem;
-          border: 1px solid var(--border);
-          border-radius: 4px;
-          font-family: inherit;
-        }
-      `}</style>
     </div>
   );
 }

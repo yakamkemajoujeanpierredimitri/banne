@@ -1,4 +1,4 @@
-import { createSignal, onMount } from 'solid-js';
+import { createSignal, onMount, Show } from 'solid-js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import '../styles/global.css';
@@ -64,6 +64,7 @@ export default function BookingWidget(props) {
           roomId: props.roomId,
           checkIn: checkIn(),
           checkOut: checkOut(),
+          guests: Number(guests()),
           userId: props.userId,
           paymentOption: paymentOption()
         })
@@ -114,18 +115,14 @@ export default function BookingWidget(props) {
       <h3>{t('booking.title')}</h3>
       <p class="price-info">{t('booking.startingAt')}{props.price || 150}{t('booking.perNight')}</p>
       
-      {status() === 'success' ? (
-        <div class="success-message">
-          <p>{t('booking.success')}</p>
-        </div>
-      ) : (
+      <Show when={status() === 'success'} fallback={
         <form onSubmit={handleBooking}>
           <div class="form-group">
             <label for="check-in">{t('booking.checkIn')}</label>
             <input 
               type="text" 
               id="check-in" 
-              ref={checkInRef}
+              ref={el => checkInRef = el}
               placeholder={t('booking.selectDate')}
               required 
             />
@@ -136,7 +133,7 @@ export default function BookingWidget(props) {
             <input 
               type="text" 
               id="check-out" 
-              ref={checkOutRef}
+              ref={el => checkOutRef = el}
               placeholder={t('booking.selectDate')}
               required 
             />
@@ -186,7 +183,11 @@ export default function BookingWidget(props) {
             {status() === 'loading' ? t('booking.processing') : t('booking.confirm')}
           </button>
         </form>
-      )}
+      }>
+        <div class="success-message">
+          <p>{t('booking.success')}</p>
+        </div>
+      </Show>
     </div>
   );
 }

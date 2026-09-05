@@ -1,10 +1,42 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { getLangFromUrl, useTranslations, useTranslatedPath } from '../../i18n/utils';
+import { prisma } from '../../lib/prisma';
+import Stripe from 'stripe';
 
 const lang = Astro.locals.lang || "it";
 const t = useTranslations(lang);
 const translatePath = useTranslatedPath(lang);
+
+const sessionId = Astro.url.searchParams.get('session_id');
+if (sessionId) {
+  const stripeSecretKey = import.meta.env.STRIPE_SECRET_KEY ;
+  if (stripeSecretKey) {
+    const stripe = new Stripe(stripeSecretKey);
+    try {
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      if (session.payment_status === 'paid' && session.client_reference_id) {
+        const bookingId = session.client_reference_id;
+        const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+        if (booking && booking.status !== 'Paid') {
+          await prisma.booking.update({
+            where: { id: bookingId },
+            data: { status: 'Paid' }
+          });
+          
+          try {
+            const { sendBookingConfirmation } = await import('../../lib/email');
+            await sendBookingConfirmation(bookingId);
+          } catch (err) {
+            console.error('Failed to send email confirmation on success page:', err);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to retrieve checkout session:', error);
+    }
+  }
+}
 ---
 
 <Layout title="Booking Successful | Albergobanne Hotel">

@@ -29,7 +29,7 @@ if (Astro.request.method === 'POST') {
       
       if (user && user.password === passwordHash) {
         if (user.role === 'ADMIN') {
-          const resend = new (await import('resend')).Resend(process.env.RESEND_API_KEY);
+          const resend = new (await import('resend')).Resend(import.meta.env.RESEND_API_KEY);
           const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
           
           await prisma.user.update({

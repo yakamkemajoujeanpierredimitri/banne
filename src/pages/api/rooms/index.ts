@@ -26,7 +26,17 @@ export const GET: APIRoute = async ({ locals }) => {
         }
       });
     } else {
-      rooms = await prisma.room.findMany();
+      rooms = await prisma.room.findMany({
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          price: true,
+          imageUrl: true,
+          amenities: true,
+          isAvailable: true,
+        }
+      });
     }
 
     return new Response(JSON.stringify(rooms), {
@@ -48,18 +58,49 @@ export const GET: APIRoute = async ({ locals }) => {
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const user = locals.user;
-    if (!user || user.role !== 'ADMIN') {
+    if (!user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
-    const data = await request.json();
+    if (user.role !== 'ADMIN') {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    }
+    
+    let data;
+    try {
+      data = await request.json();
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 });
+    }
+    
+    if (!data.name || typeof data.name !== 'string') {
+      return new Response(JSON.stringify({ error: 'Invalid or missing name' }), { status: 400 });
+    }
+    if (!data.description || typeof data.description !== 'string') {
+      return new Response(JSON.stringify({ error: 'Invalid or missing description' }), { status: 400 });
+    }
+    
+    const price = Number(data.price);
+    if (isNaN(price) || price < 0) {
+      return new Response(JSON.stringify({ error: 'Invalid price' }), { status: 400 });
+    }
+
+    let amenities = [];
+    if (data.amenities) {
+      if (Array.isArray(data.amenities)) {
+        amenities = data.amenities;
+      } else if (typeof data.amenities === 'string') {
+        amenities = data.amenities.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+      }
+    }
+
     const room = await prisma.room.create({
       data: {
         name: data.name,
         description: data.description,
-        price: Number(data.price),
+        price,
         imageUrl: data.image || '/src/assets/pic4.jpg',
-        amenities: data.amenities || [],
-        isAvailable: data.isAvailable !== undefined ? data.isAvailable : true,
+        amenities,
+        isAvailable: data.isAvailable !== undefined ? Boolean(data.isAvailable) : true,
       }
     });
     return new Response(JSON.stringify(room), {

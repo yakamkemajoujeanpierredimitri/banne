@@ -1,9 +1,17 @@
 import type { APIRoute } from 'astro';
 import { prisma } from '../../../lib/prisma';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ locals }) => {
   try {
+    const user = locals.user;
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+
+    const whereClause = user.role === 'ADMIN' ? {} : { userId: user.id };
+
     const bookings = await prisma.booking.findMany({
+      where: whereClause,
       include: { room: true, user: true },
       orderBy: { createdAt: 'desc' }
     });
@@ -45,8 +53,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-    const data = await request.json();
+    let data;
+    try {
+      data = await request.json();
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 });
+    }
     
+    if (!data.roomId) {
+      return new Response(JSON.stringify({ error: 'Missing roomId' }), { status: 400 });
+    }
+
     // Simple validation
     const checkIn = new Date(data.checkIn);
     const checkOut = new Date(data.checkOut);
@@ -59,31 +76,40 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return new Response(JSON.stringify({ error: 'Check-out must be after check-in' }), { status: 400 });
     }
 
-    // Check for double booking
-    const overlappingBookings = await prisma.booking.findMany({
-      where: {
-        roomId: data.roomId,
-        status: { not: 'Cancelled' },
-        AND: [
-          { checkInDate: { lt: checkOut } },
-          { checkOutDate: { gt: checkIn } }
-        ]
-      }
-    });
-
-    if (overlappingBookings.length > 0) {
-      return new Response(JSON.stringify({ error: 'Room is not available for these dates' }), { status: 400 });
+    const validStatuses = ['Pending', 'Paid', 'Cancelled', 'Pay_at_checkin'];
+    const resolvedStatus = data.paymentOption === 'later' ? 'Pay_at_checkin' : (data.status || 'Pending');
+    
+    if (!validStatuses.includes(resolvedStatus)) {
+      return new Response(JSON.stringify({ error: 'Invalid status' }), { status: 400 });
     }
 
-    const booking = await prisma.booking.create({
-      data: {
-        checkInDate: checkIn,
-        checkOutDate: checkOut,
-        status: data.paymentOption === 'later' ? 'Pay_at_checkin' : (data.status || 'Pending'),
-        roomId: data.roomId,
-        guestName: data.guestName,
-        userId: user.id, // Use authenticated user
+    // Check for double booking using a transaction
+    const booking = await prisma.$transaction(async (tx) => {
+      const overlappingBookings = await tx.booking.findMany({
+        where: {
+          roomId: data.roomId,
+          status: { not: 'Cancelled' },
+          AND: [
+            { checkInDate: { lt: checkOut } },
+            { checkOutDate: { gt: checkIn } }
+          ]
+        }
+      });
+
+      if (overlappingBookings.length > 0) {
+        throw new Error('Room is not available for these dates');
       }
+
+      return await tx.booking.create({
+        data: {
+          checkInDate: checkIn,
+          checkOutDate: checkOut,
+          status: resolvedStatus,
+          roomId: data.roomId,
+          guestName: data.guestName || null,
+          userId: user.id, // Use authenticated user
+        }
+      });
     });
     
     // Trigger confirmation email for pay-at-checkin bookings immediately
@@ -100,8 +126,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
       status: 201,
       headers: { 'Content-Type': 'application/json' }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
+    if (error.message === 'Room is not available for these dates') {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
     return new Response(JSON.stringify({ error: 'Failed to create booking' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

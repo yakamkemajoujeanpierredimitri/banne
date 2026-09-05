@@ -1,11 +1,31 @@
 import { Resend } from 'resend';
 import { prisma } from './prisma';
 
-const resendApiKey = import.meta.env.RESEND_API_KEY || process.env.RESEND_API_KEY ;
-const resend = new Resend(resendApiKey);
+const resendApiKey = import.meta.env.RESEND_API_KEY ;
+
+// Lazy-initialize Resend client only when needed
+let _resend: Resend | null = null;
+function getResendClient(): Resend | null {
+  if (!resendApiKey) return null;
+  if (!_resend) _resend = new Resend(resendApiKey);
+  return _resend;
+}
+
+/**
+ * Escape HTML special characters to prevent injection in email templates.
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 export async function sendBookingConfirmation(bookingId: string) {
-  if (!resendApiKey) {
+  const resend = getResendClient();
+  if (!resend) {
     console.warn('RESEND_API_KEY not configured, skipping email.');
     return;
   }
@@ -20,17 +40,25 @@ export async function sendBookingConfirmation(bookingId: string) {
     throw new Error('Booking not found for email confirmation');
   }
 
-  const checkIn = booking.checkInDate.toLocaleDateString('en-US');
-  const checkOut = booking.checkOutDate.toLocaleDateString('en-US');
-  const guestName = booking.user?.name || 'Valued Guest';
+  if (!booking.room) {
+    console.error(`Room not found for booking ${bookingId}, skipping email.`);
+    return;
+  }
+
+  const checkIn = booking.checkInDate.toISOString().split('T')[0];
+  const checkOut = booking.checkOutDate.toISOString().split('T')[0];
+  const guestName = escapeHtml(booking.user?.name || 'Valued Guest');
   const guestEmail = booking.user?.email;
-  const roomName = booking.room.name;
+  const roomName = escapeHtml(booking.room.name);
   
-  // You would typically set this in .env as well
-  const hotelAdminEmail = import.meta.env.HOTEL_ADMIN_EMAIL || process.env.HOTEL_ADMIN_EMAIL || 'yakanidamai@gmail.com';
+  const hotelAdminEmail = import.meta.env.HOTEL_ADMIN_EMAIL;
+  if (!hotelAdminEmail) {
+    console.warn('HOTEL_ADMIN_EMAIL not configured, skipping admin notification.');
+  }
+
   // Note: For Resend free tier, 'from' must be a verified domain.
-  // We'll use a placeholder domain here, assuming you will configure it in Resend.
-  const fromEmail = 'Albergobanne Hotel <onboarding@resend.dev>'; // 'onboarding@resend.dev' works for testing on free tier
+  // 'onboarding@resend.dev' works for testing on free tier
+  const fromEmail = 'Albergobanne Hotel <onboarding@resend.dev>';
 
   if (!guestEmail) {
       console.warn('No guest email found, skipping guest confirmation email');
@@ -73,33 +101,35 @@ export async function sendBookingConfirmation(bookingId: string) {
   }
 
   // Send Email to Admin
-  const adminMessage = booking.status === 'Paid'
-    ? 'A new booking has been paid and confirmed.'
-    : 'A new booking has been created (Pay at Check-in).';
+  if (hotelAdminEmail) {
+    const adminMessage = booking.status === 'Paid'
+      ? 'A new booking has been paid and confirmed.'
+      : 'A new booking has been created (Pay at Check-in).';
 
-  try {
-    await resend.emails.send({
-      from: fromEmail,
-      to: hotelAdminEmail,
-      subject: `New Booking - ${roomName} (${checkIn} to ${checkOut})`,
-      html: `
-        <div style="font-family: sans-serif; color: #333;">
-            <h1>New Booking Received</h1>
-            <p>${adminMessage}</p>
-            <h2>Booking Details</h2>
-            <ul>
-                <li><strong>Booking ID:</strong> ${booking.id}</li>
-                <li><strong>Guest Name:</strong> ${guestName}</li>
-                <li><strong>Guest Email:</strong> ${guestEmail || 'N/A'}</li>
-                <li><strong>Room:</strong> ${roomName}</li>
-                <li><strong>Check-in:</strong> ${checkIn}</li>
-                <li><strong>Check-out:</strong> ${checkOut}</li>
-                <li><strong>Status:</strong> ${booking.status}</li>
-            </ul>
-        </div>
-      `,
-    });
-  } catch (err) {
-      console.error("Failed to send admin email:", err);
+    try {
+      await resend.emails.send({
+        from: fromEmail,
+        to: hotelAdminEmail,
+        subject: `New Booking - ${roomName} (${checkIn} to ${checkOut})`,
+        html: `
+          <div style="font-family: sans-serif; color: #333;">
+              <h1>New Booking Received</h1>
+              <p>${adminMessage}</p>
+              <h2>Booking Details</h2>
+              <ul>
+                  <li><strong>Booking ID:</strong> ${booking.id}</li>
+                  <li><strong>Guest Name:</strong> ${guestName}</li>
+                  <li><strong>Guest Email:</strong> ${guestEmail || 'N/A'}</li>
+                  <li><strong>Room:</strong> ${roomName}</li>
+                  <li><strong>Check-in:</strong> ${checkIn}</li>
+                  <li><strong>Check-out:</strong> ${checkOut}</li>
+                  <li><strong>Status:</strong> ${booking.status}</li>
+              </ul>
+          </div>
+        `,
+      });
+    } catch (err) {
+        console.error("Failed to send admin email:", err);
+    }
   }
 }

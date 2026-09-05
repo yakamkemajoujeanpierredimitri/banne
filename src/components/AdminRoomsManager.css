@@ -1,0 +1,39 @@
+.admin-room-card.unavailable {
+    opacity: 0.8;
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+.admin-room-card.occupied {
+    border-color: #bae6fd;
+}
+.thumbnail-wrapper {
+    position: relative;
+}
+.badge-unavailable {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    background: #ef4444;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+.badge-occupied {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    background: #0ea5e9;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+.action-btn.disable {
+    color: #d97706;
+}
+.action-btn.enable {
+    color: #059669;
+}

@@ -1,4 +1,5 @@
-import { createSignal, createMemo, onMount } from 'solid-js';
+import { createSignal, createMemo, onMount, For, Show } from 'solid-js';
+import './AdminRoomsManager.css';
 
 export default function AdminRoomsManager() {
   const [rooms, setRooms] = createSignal([]);
@@ -30,8 +31,8 @@ export default function AdminRoomsManager() {
 
   const filteredRooms = createMemo(() => {
     return rooms().filter(room => 
-      room.name.toLowerCase().includes(search().toLowerCase()) &&
-      room.price <= maxPrice()
+      (room.name || '').toLowerCase().includes(search().toLowerCase()) &&
+      room.price <= Number(maxPrice())
     );
   });
 
@@ -131,7 +132,7 @@ export default function AdminRoomsManager() {
         </button>
       </div>
 
-      {showAddForm() && (
+      <Show when={showAddForm()}>
         <form class="add-room-form" onSubmit={handleAddRoom}>
           <h3>Aggiungi una Nuova Camera</h3>
           <div class="form-grid">
@@ -141,7 +142,7 @@ export default function AdminRoomsManager() {
             </div>
             <div class="form-group">
               <label>Prezzo per Notte ($)</label>
-              <input type="number" required min="0" value={newPrice()} onInput={e => setNewPrice(e.target.value)} />
+              <input type="number" required min="0" value={newPrice()} onInput={e => setNewPrice(Number(e.target.value))} />
             </div>
             <div class="form-group full-width">
               <label>Descrizione</label>
@@ -153,14 +154,14 @@ export default function AdminRoomsManager() {
             </div>
             <div class="form-group full-width">
               <label>Immagine Camera</label>
-              <input type="file" accept="image/*" onChange={e => setNewImage(e.target.files[0])} />
+              <input type="file" accept="image/*" onChange={e => setNewImage(e.target.files?.[0] ?? null)} />
             </div>
           </div>
           <button type="submit" class="btn" disabled={isSaving()}>
             {isSaving() ? 'Salvataggio...' : 'Salva Camera'}
           </button>
         </form>
-      )}
+      </Show>
 
       <div class="filters-bar">
         <div class="filter-group">
@@ -169,38 +170,43 @@ export default function AdminRoomsManager() {
         </div>
         <div class="filter-group">
           <label>Prezzo Max: ${maxPrice()}</label>
-          <input type="range" min="50" max="1000" step="50" value={maxPrice()} onInput={e => setMaxPrice(e.target.value)} />
+          <input type="range" min="50" max="1000" step="50" value={maxPrice()} onInput={e => setMaxPrice(Number(e.target.value))} />
         </div>
       </div>
 
       <div class="rooms-grid">
-        {filteredRooms().map(room => {
-          const isOccupied = room.bookings && room.bookings.length > 0;
-          const currentOccupant = isOccupied ? room.bookings[0].user : null;
-          const checkOutDate = isOccupied ? new Date(room.bookings[0].checkOutDate).toLocaleDateString() : null;
+        <For each={filteredRooms()}>
+          {(room) => {
+            const isOccupied = room.bookings && room.bookings.length > 0;
+            const currentOccupant = isOccupied ? room.bookings[0].user : null;
+            const checkOutDate = isOccupied ? new Date(room.bookings[0].checkOutDate).toLocaleDateString() : null;
 
-          return (
-          <div class={`admin-room-card ${!room.isAvailable ? 'unavailable' : ''} ${isOccupied ? 'occupied' : ''}`}>
-            <div class="thumbnail-wrapper">
+            return (
+            <div class={`admin-room-card ${!room.isAvailable ? 'unavailable' : ''} ${isOccupied ? 'occupied' : ''}`}>
+              <div class="thumbnail-wrapper">
                 <img src={room.image} alt={room.name} class="room-thumbnail" />
-                {!room.isAvailable && <span class="badge-unavailable">Non disponibile</span>}
-                {isOccupied && room.isAvailable && <span class="badge-occupied">Occupata</span>}
-            </div>
-            <div class="room-details">
-              <h4>{room.name}</h4>
-              <p class="price">${room.price} / notte</p>
-              <p class="desc">{room.description}</p>
-              <p class="amenities" style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">
-                <strong>Servizi:</strong> {room.amenities && room.amenities.length > 0 ? room.amenities.join(', ') : 'Nessuno'}
-              </p>
-              {isOccupied && (
-                <div class="occupant-info" style="margin-top: 0.75rem; padding: 0.5rem; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 4px; font-size: 0.9rem; color: #0369a1;">
-                  <strong>Attuale Occupante:</strong> {currentOccupant?.name} ({currentOccupant?.email})<br/>
-                  <strong>Check-out:</strong> {checkOutDate}
-                </div>
-              )}
-            </div>
-            <div class="room-actions">
+                <Show when={!room.isAvailable}>
+                  <span class="badge-unavailable">Non disponibile</span>
+                </Show>
+                <Show when={isOccupied && room.isAvailable}>
+                  <span class="badge-occupied">Occupata</span>
+                </Show>
+              </div>
+              <div class="room-details">
+                <h4>{room.name}</h4>
+                <p class="price">${room.price} / notte</p>
+                <p class="desc">{room.description}</p>
+                <p class="amenities" style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">
+                  <strong>Servizi:</strong> {room.amenities && room.amenities.length > 0 ? room.amenities.join(', ') : 'Nessuno'}
+                </p>
+                <Show when={isOccupied}>
+                  <div class="occupant-info" style="margin-top: 0.75rem; padding: 0.5rem; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 4px; font-size: 0.9rem; color: #0369a1;">
+                    <strong>Attuale Occupante:</strong> {currentOccupant?.name} ({currentOccupant?.email})<br/>
+                    <strong>Check-out:</strong> {checkOutDate}
+                  </div>
+                </Show>
+              </div>
+              <div class="room-actions">
                 <button 
                   class={`action-btn ${room.isAvailable ? 'disable' : 'enable'}`} 
                   onClick={() => toggleAvailability(room.id)}
@@ -209,53 +215,14 @@ export default function AdminRoomsManager() {
                 </button>
                 <button class="action-btn">Modifica</button>
                 <button class="action-btn delete" onClick={() => handleDelete(room.id)}>Elimina</button>
+              </div>
             </div>
-          </div>
-        )})}
-        {filteredRooms().length === 0 && <p class="no-results">Nessuna camera corrisponde ai tuoi filtri.</p>}
+          )}}
+        </For>
+        <Show when={filteredRooms().length === 0}>
+          <p class="no-results">Nessuna camera corrisponde ai tuoi filtri.</p>
+        </Show>
       </div>
-      
-      <style>{`
-        .admin-room-card.unavailable {
-            opacity: 0.8;
-            background: #f8fafc;
-            border-color: #cbd5e1;
-        }
-        .admin-room-card.occupied {
-            border-color: #bae6fd;
-        }
-        .thumbnail-wrapper {
-            position: relative;
-        }
-        .badge-unavailable {
-            position: absolute;
-            top: 0.5rem;
-            left: 0.5rem;
-            background: #ef4444;
-            color: white;
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-        }
-        .badge-occupied {
-            position: absolute;
-            top: 0.5rem;
-            left: 0.5rem;
-            background: #0ea5e9;
-            color: white;
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-        }
-        .action-btn.disable {
-            color: #d97706;
-        }
-        .action-btn.enable {
-            color: #059669;
-        }
-      `}</style>
     </div>
   );
 }
